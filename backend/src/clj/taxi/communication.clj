@@ -113,7 +113,7 @@
 
          (onDiscard
           [this]
-          (go (>! jackie {:topic-add {:result :discarded}}))
+          (go (>! jackie {:topic-add {:result :discarded :topic-path topic-path}}))
           nil)
          ))))
 

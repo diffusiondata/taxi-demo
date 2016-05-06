@@ -77,9 +77,16 @@
           (let [event (<! jackie)]
 
             (cond
-             (:state-change event) (handle-session-state-change (:state-change event) jackie app-state)
-             (:message event) (auction/process-message app-state jackie (:session-id (:message event)) (:content (:message event)))
-             :else (println "Unknown event:" event))
+              (:state-change event)  (handle-session-state-change (:state-change event) jackie app-state)
+              (:message event)       (auction/process-message app-state jackie (:session-id (:message event)) (:content (:message event)))
+              (:topic-add event)     (let [detail (:topic-add event)]
+                                       (when (= (:result detail) :failed) (println "Failed to add topic" (:topic-path detail) "because" (:reason detail)))
+                                       (when (= (:result detail) :discarded) (println "Topic addition not confirmed for" (:topic-path detail))))
+              (:topic-update event)  (let [detail (:topic-update event)] (when (= (:result detail) :error) (println "Failed to update topic" (:topic-path detail) "because" (:reason detail))))
+              (:topics-remove event) (let [detail (:topic-update event)] (when (= (:result detail) :discarded) (println "Topic removal not confirmed for" (:topic-selector detail))))
+              (:remove-topics-with-session event) "Failures not converted to EDN"
+              (:message-handler-state event) (let [detail (:message-handler-state event)] (println "Message handler for" (:topic-path detail) "is" (:handler-state detail)))
+              :else                  (println "Unknown event:" event))
 
             ))))
 
