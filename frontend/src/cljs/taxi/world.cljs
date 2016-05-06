@@ -12,8 +12,6 @@
 
 (def frame-time (/ 1000 frames-per-second))
 
-(def block-colour "rgb(120, 90 ,0)")
-
 (def grid-ratio 0.7)
 
 (def road-ratio 3)

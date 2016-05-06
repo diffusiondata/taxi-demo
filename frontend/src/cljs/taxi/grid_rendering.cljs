@@ -71,12 +71,11 @@
 
   [{:keys [x y]}]
   (dom/div
-   #js {:style #js {:backgroundColor world/block-colour
-                    :left x
+   #js {:style #js {:left x
                     :top y
                     :height block-size
-                    :width block-size
-                    :position "absolute"}}
+                    :width block-size}
+        :className "block"}
    nil))
 
 (defn- grid

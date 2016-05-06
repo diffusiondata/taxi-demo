@@ -24,6 +24,11 @@
   margin: 30px 30px;
 }
 
+.block {
+  background-color: #785a00;
+  position: absolute;
+}
+
 .taxiContainer {
   z-index: 2;
 }
