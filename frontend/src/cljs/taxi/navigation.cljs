@@ -43,10 +43,10 @@
                            (om/set-state! owner :active-key k)
                            )
               }
-       (n/nav-item {:key 1 :href (controller-page)} "Controller")
-       (n/nav-item {:key 2 :href (auction-page)} "Auctions")
+       (n/nav-item {:key 1 :href (controller-page)} "World view")
+       (n/nav-item {:key 2 :href (auction-page)} "Veiw auctions")
        (n/nav-item {:key 3 :href (taxi-page)} "Taxis")
-       (n/nav-item {:key 4 :href (passenger-page)} "Passenger")))))
+       (n/nav-item {:key 4 :href (passenger-page)} "Add passenger")))))
 
 
 (defn controller-view [data _]
@@ -55,7 +55,7 @@
     (render [_]
       (dom/div
        #js {:className "content"}
-       (r/page-header {} "Controller")
+       (r/page-header {} "World view")
        (om/build grid/view data)))))
 
 (defn auction-view [data _]
@@ -64,7 +64,7 @@
     (render [_]
       (dom/div
        #js {:className "content"}
-       (r/page-header {} "Auctions")
+       (r/page-header {} "Veiw auctions")
        (om/build controller/auctions-view data)))))
 
 (defn taxi-page-view [data _]
@@ -81,7 +81,7 @@
     (render [_]
       (dom/div
        #js {:className "content"}
-       (r/page-header {} "Passengers")
+       (r/page-header {} "Add passenger")
        (om/build passenger/view data)
        ))))
 
