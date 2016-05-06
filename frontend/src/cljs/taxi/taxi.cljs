@@ -130,7 +130,7 @@
 
 (defn- move-taxi
   "Move the taxi to its next position."
-  [{:keys [position route speed state] :as taxi-state}]
+  [collection-chan {:keys [position route speed state name] :as taxi-state}]
 
   (if (seq route)
     ; If there is a current route continue to follow it
@@ -139,9 +139,11 @@
       ; If we are roaming pick a random destination
       :roaming (set-destination taxi-state position speed (random-destination))
       ; If we are collecting we have arrived near the passenger
-      :collecting (-> taxi-state
+      :collecting (do
+                    (go (>! collection-chan name))
+                    (-> taxi-state
                       (stop-taxi-moving)
-                      (assoc :state :carrying))
+                      (assoc :state :carrying)))
       ; If we are carrying we have arrived near the passenger's destination
       :carrying (-> taxi-state
                     (stop-taxi-moving)
@@ -187,9 +189,9 @@
         (d/send-message error session "controller/auctions" {:type :bid :value (generate-new-bid open-auction taxi)})
     ))))
 
-(defn- move-taxis [{:keys [error session taxis] :as app-state}]
+(defn- move-taxis [{:keys [error session taxis] :as app-state} collection-chan]
 
-  (let [moved (map move-taxi taxis)]
+  (let [moved (map (partial move-taxi collection-chan) taxis)]
     (doseq [t moved]
       (if-let [{:keys [topic position]} t]
         (d/update-topic error session topic position)))
@@ -272,7 +274,9 @@
         ; Listen for changes to auctions
         auctions (d/subscribe error session "?controller/auctions/")
         ; Create channel to trigger bid placement
-        bid-chan (chan)]
+        bid-chan (chan)
+        ; Create channel to notify controller of collection
+        collection-chan (chan)]
 
     ; Setup go routines to update the taxi positions and react to events
     (go
@@ -285,7 +289,9 @@
 
           bid-chan                     ([e] (d/send-message error session "controller/auctions" {:type :bid :value e}))
 
-          (timeout world/update-speed) ([_] (swap! app-state move-taxis)))
+          collection-chan              ([e] (d/send-message error session "controller/collection" {:type :collection :value e}))
+
+          (timeout world/update-speed) ([_] (swap! app-state move-taxis collection-chan)))
         ))
 
 
