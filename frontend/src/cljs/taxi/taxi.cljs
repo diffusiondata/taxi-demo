@@ -241,17 +241,20 @@
    `app-state` is the application state atom.
    Returns a channel that will be sent an event when initialisation is complete, or closed."
 
-  (let [{:keys [session error taxi-topic-root taxis]}
+  (let [{:keys [session error taxi-topic-root]}
         ; Update application state with our fields.
         (swap! app-state
-               (fn[{:keys [session] :as old}]
-                 (assoc old
+               (fn [{:keys [session] :as old-state}]
+                 (assoc old-state
                         :taxi-topic-root (str "taxi/" (.-sessionID session))
                         :next-taxi-id 0
                         :taxis [])))
+        ; Listen for changes to auctions
         auctions (d/subscribe error session "?controller/auctions/")
+        ; Create channel to trigger bid placement
         bid-chan (chan)]
 
+    ; Setup go routines to update the taxi positions and react to events
     (go
       (while (.isConnected session)
         (alt!
