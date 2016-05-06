@@ -28,10 +28,10 @@
     :builds [{:id "dev"
               :source-paths ["src/cljs" "dev_src/cljs"]
               :compiler {:output-to "resources/public/js/compiled/taxi.js"
-                         :output-dir "resources/public/js/compiled/out"
+                         :output-dir "resources/public/js/compiled/dev"
                          :optimizations :none
                          :main taxi.dev
-                         :asset-path "js/compiled/out"
+                         :asset-path "js/compiled/dev"
                          :source-map true
                          :source-map-timestamp true
                          :cache-analysis true
@@ -41,7 +41,7 @@
              {:id "min"
               :source-paths ["src/cljs"]
               :compiler {:output-to "resources/public/js/compiled/taxi.js"
-                         :output-dir "resources/public/js/compiled/out2"
+                         :output-dir "resources/public/js/compiled/release"
                          :main taxi.core
                          :optimizations :simple
                          :pretty-print false
@@ -56,6 +56,7 @@
              }
 
   :ring {:handler server.core/handler
-         :war-exclusions [#"^\..+$", #"public/js/compiled/out.*$"]}
+         :war-exclusions [#"\.DS_Store$", #"public/js/compiled/dev.*$", #"public/js/compiled/release.*$"]}
 
-  :aliases {"release-build" ["do" "clean" ["cljsbuild" "once" "min"] ["ring" "uberwar"]]})
+  :aliases {"release-build" ["do" "clean" ["cljsbuild" "once" "min"] ["ring" "uberwar"]]
+            "dev-build" ["do" "clean" ["cljsbuild" "once" "dev"]]})
