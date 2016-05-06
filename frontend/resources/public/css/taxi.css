@@ -1,0 +1,60 @@
+
+.content {
+  margin: 10px;
+}
+
+.location {
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.passenger {
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-image: url('/images/passenger.png');
+  z-index: 2;
+}
+
+.grid {
+  background-color: lightgrey;
+  position: relative;
+  margin: 30px 30px;
+}
+
+.taxiContainer {
+  z-index: 2;
+}
+
+.taxi {
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 2;
+}
+
+.taxi + div {
+  display: none;
+}
+
+.taxi:hover + div {
+  display: block;
+}
+
+.taxiInfo, .passengerInfo {
+  white-space: nowrap;
+  background-color: #f0f0f0;
+  position: absolute;
+  padding: 5px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #000000;
+  z-index: 3;
+}
+
+.form-vertical {
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}

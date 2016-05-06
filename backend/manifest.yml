@@ -1,0 +1,13 @@
+applications:
+- name: "taxi-controller"
+  memory: "384M"
+  disk_quota: "256M"
+  path: "target/taxi-controller-0.1.0-SNAPSHOT-standalone.jar"
+  no-route: true
+  timeout: 60
+  env:
+    JVM: openjdk
+    REAPPT_HOST: pushingstrikingAres.us.reappt.io
+    REAPPT_PORT: 443
+    REAPPT_SECURE: true
+
