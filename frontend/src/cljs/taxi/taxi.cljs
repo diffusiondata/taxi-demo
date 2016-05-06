@@ -15,7 +15,10 @@
 ;; Taxi states: :roaming, :bidding, :collecting, :carrying
 ;;
 
-(defn- random-destination []
+(defn- random-destination
+  "Generates a random destination with the bounds of the world."
+  []
+
   [(rand-int world/grid-width)
    (rand-int world/grid-height)])
 
@@ -23,7 +26,10 @@
   (let [rnd js/Math.round]
     [(rnd x) (rnd y)]))
 
-(defn- pick-direction [[x1 y1] [x2 y2]]
+(defn- pick-direction
+  "Pick a direction that heads towards the destination."
+  [[x1 y1] [x2 y2]]
+
   (let [xd (- x2 x1)
         yd (- y2 y1)
         abs js/Math.abs
@@ -98,39 +104,53 @@
                 (steps-to-updates (next route) speed (- (+ sx distance) ex)))
        nil [[ex ey]]))))
 
-(defn- set-destination [taxi-state position speed new-destination]
+(defn- set-destination
+  "Set the destination for a taxi and selects a route to it from the current position."
+  [taxi-state position speed new-destination]
+
   (-> taxi-state
       (assoc :destination new-destination)
       (assoc :route (steps-to-updates (steps (quantise position) new-destination) speed))))
 
-(defn- stop-taxi-moving [{:keys [position] :as taxi-state}]
+(defn- stop-taxi-moving
+  "Stop the taxi from moving. Clear the route."
+  [{:keys [position] :as taxi-state}]
+
   (-> taxi-state
         (assoc :position (quantise position))
         (dissoc :route)))
 
+(defn- follow-route
+  "Move the taxi along its route."
+  [taxi-state route]
+
+  (-> taxi-state
+      (assoc :position (first route))
+      (assoc :route (next route))))
+
 (defn- move-taxi
+  "Move the taxi to its next position."
   [{:keys [position route speed state] :as taxi-state}]
 
-  (condp = state
-    :roaming (if-let [p (first route)]
-               (-> taxi-state
-                   (assoc :position p)
-                   (assoc :route (next route)))
-               (set-destination taxi-state position speed (random-destination)))
-    :collecting (if-let [p (first route)]
-                  (-> taxi-state
-                      (assoc :position p)
-                      (assoc :route (next route)))
-                  (assoc (stop-taxi-moving taxi-state) :state :carrying))
-    :carrying (if-let [p (first route)]
-                (-> taxi-state
-                      (assoc :position p)
-                      (assoc :route (next route)))
-                (assoc (stop-taxi-moving taxi-state) :state :roaming))
-    (stop-taxi-moving taxi-state)
-    ))
+  (if (seq route)
+    ; If there is a current route continue to follow it
+    (follow-route taxi-state route)
+    (condp = state
+      ; If we are roaming pick a random destination
+      :roaming (set-destination taxi-state position speed (random-destination))
+      ; If we are collecting we have arrived near the passenger
+      :collecting (-> taxi-state
+                      (stop-taxi-moving)
+                      (assoc :state :carrying))
+      ; If we are carrying we have arrived near the passenger's destination
+      :carrying (-> taxi-state
+                    (stop-taxi-moving)
+                    (assoc :state :roaming))
+      ; Otherwise stop moving the taxi
+      (stop-taxi-moving taxi-state))))
 
 (defn- next-taxi-name
+  "Generate a new taxi name."
   [data]
 
   (let [{:keys [session next-taxi-id]} (deref (om/transact! data :next-taxi-id inc))]
