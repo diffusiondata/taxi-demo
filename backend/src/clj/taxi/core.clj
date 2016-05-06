@@ -54,6 +54,7 @@
             Session$State/CONNECTED_ACTIVE))
     (swap! app-state assoc :session session)
     (diffusion/register-message-handler session jackie "controller/auctions")
+    (diffusion/register-message-handler session jackie "controller/collection")
     (diffusion/remove-topics-with-session session jackie "controller/auctions"))
 
   ; Trigger connect again
