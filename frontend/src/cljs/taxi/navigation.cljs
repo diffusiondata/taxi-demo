@@ -44,7 +44,7 @@
                            )
               }
        (n/nav-item {:key 1 :href (controller-page)} "World view")
-       (n/nav-item {:key 2 :href (auction-page)} "Veiw auctions")
+       (n/nav-item {:key 2 :href (auction-page)} "View auctions")
        (n/nav-item {:key 3 :href (taxi-page)} "Taxis")
        (n/nav-item {:key 4 :href (passenger-page)} "Add passenger")))))
 
@@ -64,7 +64,7 @@
     (render [_]
       (dom/div
        #js {:className "content"}
-       (r/page-header {} "Veiw auctions")
+       (r/page-header {} "View auctions")
        (om/build controller/auctions-view data)))))
 
 (defn taxi-page-view [data _]
