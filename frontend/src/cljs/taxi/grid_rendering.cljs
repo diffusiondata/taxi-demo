@@ -219,13 +219,28 @@
                                       (nth (:location (:journey passenger)) 1))}}
               (passenger-info passenger)))))
 
+(defn- gather-journey-info
+  "Gather the information needed to display journeys on the world view."
+  [state]
+
+  (let [passengers (filter #(= (:journey-state %) :pending) (vals (:global-journeys state)))]
+    (map (fn [journey]
+           (let [auctions-for-journey (filter #(= (:journey-id journey) (:journey-id %)) (vals (:auctions state)))]
+             (if
+               (first auctions-for-journey)
+               ; Found an auction for the journey add current bid information
+               (assoc journey :bid (:bid (first auctions-for-journey)))
+               ; Did not find an auction for the journey
+               journey)))
+         passengers)))
+
 (defn- waiting-passengers
   "Returns a sequence containing all the React components that represent a
   pending journeys."
   [state]
   (om/build-all
    waiting-passenger
-   (filter (fn [journey] (= (:journey-state journey) :pending)) (vals (:global-journeys state)))))
+   (gather-journey-info state)))
 
 (defn view
   [state owner]
