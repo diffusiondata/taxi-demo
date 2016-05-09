@@ -146,7 +146,7 @@
 
     (go
      (let [taxi-locations (d/subscribe error session "?taxi/.*/.*")
-           journeys (d/subscribe error session "?controller/journey//")]
+           journeys (d/subscribe error session "?controller/journey/")]
 
        (>! result true)
 

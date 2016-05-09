@@ -192,18 +192,18 @@
                        :width taxi-size
                        :height taxi-size))}))
 
-(defn- passenger-info [auction]
+(defn- passenger-info [passenger]
   "Return a passenger info div."
   (dom/div #js {:className "passengerInfo"
                 :style #js {:left taxi-size
                             :position "absolute"}}
            (dom/div nil (dom/span nil
                                   (str "I want to go to "
-                                       (util/location-to-string (:destination (:journey auction))))))
-           (if (not (nil? (:bid auction)))
+                                       (util/location-to-string (:destination (:journey passenger))))))
+           (if (not (nil? (:bid passenger)))
              (dom/div nil (dom/span nil
                                     (str "Current bid "
-                                         (util/money-to-string (:bid auction))))))))
+                                         (util/money-to-string (:bid passenger))))))))
 
 (defn- waiting-passenger [passenger]
   "Render a single waiting passenger."
@@ -214,9 +214,9 @@
                    :style #js {:height taxi-size
                                :width taxi-size
                                :left (block-offset
-                                      (nth (:location (:journey auction)) 0))
+                                      (nth (:location (:journey passenger)) 0))
                                :top  (block-offset
-                                      (nth (:location (:journey auction)) 1))}}
+                                      (nth (:location (:journey passenger)) 1))}}
               (passenger-info passenger)))))
 
 (defn- waiting-passengers
@@ -225,7 +225,7 @@
   [state]
   (om/build-all
    waiting-passenger
-   (vals (:global-journeys state))))
+   (filter (fn [journey] (= (:journey-state journey) :pending)) (vals (:global-journeys state)))))
 
 (defn view
   [state owner]

@@ -83,7 +83,12 @@
 
 (defn- taxi-arrived-to-collect
   "Called when a taxi arrives to collect."
-  [value app-state])
+  [journey-id jackie app-state]
+
+  (let [new-state (swap! app-state assoc-in [:journeys journey-id :journey-state] :in-progress)
+        new-journey (get-in new-state [:journeys journey-id])]
+
+    (diffusion/update-topic (:session @app-state) jackie (str "controller/journey/" journey-id) new-journey)))
 
 (defn process-message
   "Process message events taken from the channel.
@@ -94,5 +99,5 @@
     :journey  (start-auction value auction-chan app-state)
     :bid      (update-auction value session-id auction-chan app-state)
     :accept-journey (journey-accepted value)
-    :collection-arrival (taxi-arrived-to-collect value app-state)
+    :collection-arrival (taxi-arrived-to-collect value auction-chan app-state)
     (println "Ignoring" request)))

@@ -140,10 +140,11 @@
       :roaming (set-destination taxi-state position speed (random-destination))
       ; If we are collecting we have arrived near the passenger
       :collecting (do
-                    (go (>! collection-chan name))
+                    (go (>! collection-chan (:journey-id taxi-state)))
                     (-> taxi-state
                       (stop-taxi-moving)
-                      (assoc :state :carrying)))
+                      (assoc :state :carrying)
+                      (dissoc :journey-id)))
       ; If we are carrying we have arrived near the passenger's destination
       :carrying (-> taxi-state
                     (stop-taxi-moving)
@@ -217,7 +218,7 @@
     :taxis
     new-taxis)))
 
-(defn- process-auction-winner [state taxi-name bid location destination]
+(defn- process-auction-winner [state taxi-name bid location destination journey-id]
   ;; Need a way to update the taxi state with a new destination
   (println "And the winner is" taxi-name "at" (util/money-to-string bid))
   (when
@@ -228,10 +229,10 @@
       modify-taxi
       taxi-name
       (fn [taxi]
-        (assoc
-          (set-destination taxi (:position taxi) (:speed taxi) location)
-          :state :collecting)))
-    ))
+        (-> taxi
+          (set-destination (:position taxi) (:speed taxi) location)
+          (assoc :state :collecting)
+          (assoc :journey-id journey-id))))))
 
 (defn- process-auction-update [e state bid-chan]
   ;; Ignore the last bidder
@@ -246,7 +247,7 @@
             (when (not-empty bidding-taxis)
               (new-bid e (rand-nth bidding-taxis) bid-chan)))
 
-    :offered (process-auction-winner state (:bidder e) (:bid e) (:location (:journey e)) (:destination (:journey e)))
+    :offered (process-auction-winner state (:bidder e) (:bid e) (:location (:journey e)) (:destination (:journey e)) (:journey-id e))
 
     (println "Ignoring " e)))
 
@@ -289,7 +290,7 @@
 
           bid-chan                     ([e] (d/send-message error session "controller/auctions" {:type :bid :value e}))
 
-          collection-chan              ([e] (d/send-message error session "controller/collection" {:type :collection :value e}))
+          collection-chan              ([e] (d/send-message error session "controller/collection" {:type :collection-arrival :value e}))
 
           (timeout world/update-speed) ([_] (swap! app-state move-taxis collection-chan)))
         ))
