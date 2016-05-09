@@ -2,29 +2,7 @@
   (:use
    [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]]
    [clojure.edn :as edn :only [read-string]])
-  (:require [taxi.communication :as diffusion])
-  (:import com.pushtechnology.diffusion.client.Diffusion
-           com.pushtechnology.diffusion.client.session.Session
-           com.pushtechnology.diffusion.client.session.Session$Listener
-           com.pushtechnology.diffusion.client.session.Session$State
-           com.pushtechnology.diffusion.client.features.control.topics.MessagingControl
-           com.pushtechnology.diffusion.client.features.control.topics.MessagingControl$MessageHandler
-           com.pushtechnology.diffusion.client.features.control.topics.MessagingControl$SendCallback
-           com.pushtechnology.diffusion.client.features.control.topics.TopicControl
-           com.pushtechnology.diffusion.client.features.control.topics.TopicControl$AddCallback
-           com.pushtechnology.diffusion.client.features.control.topics.TopicControl$RemoveCallback
-           com.pushtechnology.diffusion.client.features.Topics
-           com.pushtechnology.diffusion.client.features.Topics$CompletionCallback
-           com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl
-           com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl$Updater$UpdateCallback
-           com.pushtechnology.diffusion.client.features.Topics$TopicStream
-           com.pushtechnology.diffusion.client.topics.details.TopicType
-           com.pushtechnology.diffusion.client.callbacks.TopicTreeHandler
-
-           java.lang.Thread
-           java.security.KeyStore
-           javax.net.ssl.SSLContext
-           javax.net.ssl.TrustManagerFactory))
+  (:require [taxi.communication :as diffusion]))
 
 (def auction-time-ms (* 20 1000))
 (def auction-keep-alive-ms (* 2 60 1000))
