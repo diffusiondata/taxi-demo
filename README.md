@@ -28,7 +28,7 @@ Every time a passenger is added a new auction is created. The taxis will bid on 
 
 With both taxis and passengers present the *View auctions* tab shows the state of each auction. The passenger, the details of the journey and the current leading bid. The auction starts in an open state, while open new bids are accepted. After 20 seconds the auction changes to an offered state where no new bids are accepted and the leading bidder is notified of their win.
 
-Passengers will eventually give up. If you add a passenger without any taxis they will eventually be removed by the backend.
+Passengers will eventually give up. If you add a passenger without any taxis or enough taxis they will eventually be removed by the backend.
 
 ##### Where it goes wrong
 
