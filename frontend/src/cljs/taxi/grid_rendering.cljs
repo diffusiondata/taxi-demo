@@ -205,8 +205,8 @@
                                     (str "Current bid "
                                          (util/money-to-string (:bid auction))))))))
 
-(defn- auction [auction]
-  "Render a single auction."
+(defn- waiting-passenger [passenger]
+  "Render a single waiting passenger."
   (reify om/IRender
     (render
      [_]
@@ -217,15 +217,15 @@
                                       (nth (:location (:journey auction)) 0))
                                :top  (block-offset
                                       (nth (:location (:journey auction)) 1))}}
-              (passenger-info auction)))))
+              (passenger-info passenger)))))
 
-(defn- auctions
-  "Returns a sequence containing all the React components that represent an
-  auction."
+(defn- waiting-passengers
+  "Returns a sequence containing all the React components that represent a
+  pending journeys."
   [state]
   (om/build-all
-   auction
-   (vals (:auctions state))))
+   waiting-passenger
+   (vals (:global-journeys state))))
 
 (defn view
   [state owner]
@@ -240,5 +240,5 @@
           (grid state)
           (taxis state)
           (locations state)
-          (auctions state)))))))
+          (waiting-passengers state)))))))
 

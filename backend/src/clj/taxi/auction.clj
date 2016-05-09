@@ -1,7 +1,8 @@
 (ns taxi.auction
   (:use
    [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]]
-   [clojure.edn :as edn :only [read-string]])
+   [clojure.edn :as edn :only [read-string]]
+   [taxi.journey :as journey])
   (:require [taxi.communication :as diffusion]))
 
 (def auction-time-ms (* 20 1000))
@@ -31,10 +32,10 @@
 
 (defn- claim-auction
   "Update the app-state with a new auction."
-  [{:keys [last-auction-id session] :as state} request]
+  [{:keys [last-auction-id session] :as state} request journey]
 
   (let [auction-id (inc last-auction-id)
-        auction {:id auction-id :journey request :auction-state :open}]
+        auction {:id auction-id :journey request :auction-state :open :journey-id (:journey-id journey)}]
     (-> state
         (assoc-in [:auctions auction-id] auction)
         (assoc :last-auction-id auction-id))))
@@ -43,7 +44,8 @@
   "Process new :journey message event."
   [request auction-chan app-state]
 
-  (let [new-state (swap! app-state claim-auction request)
+  (let [journey (journey/new-journey request auction-chan app-state)
+        new-state (swap! app-state claim-auction request journey)
         auction-id (:last-auction-id new-state)
         auction (get-in new-state [:auctions auction-id])]
 
@@ -80,8 +82,8 @@
   [value])
 
 (defn- taxi-arrived-to-collect
-  ""
-  [value])
+  "Called when a taxi arrives to collect."
+  [value app-state])
 
 (defn process-message
   "Process message events taken from the channel.
@@ -92,5 +94,5 @@
     :journey  (start-auction value auction-chan app-state)
     :bid      (update-auction value session-id auction-chan app-state)
     :accept-journey (journey-accepted value)
-    :collection-arrival (taxi-arrived-to-collect value)
+    :collection-arrival (taxi-arrived-to-collect value app-state)
     (println "Ignoring" request)))

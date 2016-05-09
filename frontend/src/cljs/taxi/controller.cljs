@@ -122,6 +122,11 @@
 
   (assoc state :all-taxis (reduce taxi-prediction {} all-taxis)))
 
+(defn- process-journey-event [app-state journey-event]
+  (println "New journey notification " journey-event)
+  (let [journey-id (:journey-id (:value journey-event))]
+    (swap! app-state assoc-in [:global-journeys journey-id] (:value journey-event))))
+
 (defn init
   "Initialise controller. We don't use the Om component lifecycle because
    that's initialised every time the component is remounted.
@@ -135,17 +140,21 @@
         ;; Update application state with our fields.
         (swap! app-state assoc
                :auctions {}
-               :next-auction-id 0)
+               :next-auction-id 0
+               :global-journeys {})
         result (chan)]
 
     (go
-     (let [taxi-locations (d/subscribe error session "?taxi/.*/.*")]
+     (let [taxi-locations (d/subscribe error session "?taxi/.*/.*")
+           journeys (d/subscribe error session "?controller/journey//")]
 
        (>! result true)
 
        (while (.isConnected session)
          (alt!
           taxi-locations             ([e] (process-taxi app-state e))
+
+          journeys ([e] (process-journey-event app-state e))
 
           ;; Regular updates
           (timeout world/frame-time) ([_] (swap! app-state taxi-predictions))))))

@@ -55,7 +55,8 @@
     (swap! app-state assoc :session session)
     (diffusion/register-message-handler session jackie "controller/auctions")
     (diffusion/register-message-handler session jackie "controller/collection")
-    (diffusion/remove-topics-with-session session jackie "controller/auctions"))
+    (diffusion/remove-topics-with-session session jackie "controller/auctions")
+    (diffusion/remove-topics-with-session session jackie "controller/journey"))
 
   ; Trigger connect again
   (when (= new-state
@@ -67,7 +68,9 @@
 
   (let [jackie (chan)
         app-state (atom {:auctions {}
-                         :last-auction-id 0})
+                         :last-auction-id 0
+                         :journeys {}
+                         :last-journey-id 0})
         session-factory (diffusion/create-session-factory jackie "taxi-controller" "taxi")]
 
     (create-session session-factory)
