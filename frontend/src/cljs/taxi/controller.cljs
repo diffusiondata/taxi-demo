@@ -15,7 +15,6 @@
 
 (defn- taxi-joined
   [id state]
-    (println "Taxi" id "joined")
     (assoc-in state [:all-taxis id] {}))
 
 (defn- calculate-speed
@@ -50,7 +49,6 @@
 
 (defn- taxi-retired
   [id state]
-    (println "Taxi" id "retired")
     (update-in state [:all-taxis] dissoc id))
 
 (defn- process-taxi
@@ -123,7 +121,6 @@
   (assoc state :all-taxis (reduce taxi-prediction {} all-taxis)))
 
 (defn- process-journey-event [app-state journey-event]
-  (println "New journey notification " journey-event)
   (when (= (:type journey-event) :update)
     (let [journey-id (:journey-id (:value journey-event))]
       (swap! app-state assoc-in [:global-journeys journey-id] (:value journey-event))))
@@ -131,7 +128,7 @@
   (when (= (:type journey-event) :unsubscribed)
     (let [id (.parseInt js/window (get (re-matches #"controller/journey/(.*)" (:topic journey-event)) 1))]
       (when id
-        (swap! state update-in [:global-journeys] dissoc id)))))
+        (swap! app-state update-in [:global-journeys] dissoc id)))))
 
 (defn init
   "Initialise controller. We don't use the Om component lifecycle because
