@@ -130,7 +130,7 @@
 
 (defn- move-taxi
   "Move the taxi to its next position."
-  [collection-chan {:keys [position route speed state name] :as taxi-state}]
+  [collection-chan app-state {:keys [position route speed state name] :as taxi-state}]
 
   (if (seq route)
     ; If there is a current route continue to follow it
@@ -142,7 +142,7 @@
       :collecting (do
                     (go (>! collection-chan (:journey-id taxi-state)))
                     (-> taxi-state
-                      (stop-taxi-moving)
+                      (set-destination position speed (:destination (:journey (get (:global-journeys app-state) (:journey-id taxi-state)))))
                       (assoc :state :carrying)
                       (dissoc :journey-id)))
       ; If we are carrying we have arrived near the passenger's destination
@@ -192,7 +192,7 @@
 
 (defn- move-taxis [{:keys [error session taxis] :as app-state} collection-chan]
 
-  (let [moved (map (partial move-taxi collection-chan) taxis)]
+  (let [moved (map (partial move-taxi collection-chan app-state) taxis)]
     (doseq [t moved]
       (if-let [{:keys [topic position]} t]
         (d/update-topic error session topic position)))
