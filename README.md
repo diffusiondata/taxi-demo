@@ -2,7 +2,7 @@
 
 A demo for Reappt and Bluemix themed on taxis.
 
-The demo models a small town, passengers and taxis. When a passenger appears taxis can bid on the oppertunity to give them a ride. The winning taxi collects and delivers the passenger and gets paid the fair.
+The demo models a small town, passengers and taxis. When a passenger appears taxis can bid on the opportunity to give them a ride. The winning taxi collects and delivers the passenger and gets paid the fair.
 
 ### Using the demo
 
@@ -10,11 +10,11 @@ You can use the demo through a web application. The application has four tabs to
 
 ### World view
 
-When you open the appliction you are presented with the *World view*. This gives a graphical overview of the town. You can see the road layout. It's a new town with a grid layout, much like Milton Keynes. There are a few landmarks (transplanted from London?). Once added, you will also see taxis and passengers moving around.
+When you open the application you are presented with the *World view*. This gives a graphical overview of the town. You can see the road layout. It's a new town with a grid layout, much like Milton Keynes. There are a few landmarks (transplanted from London?). Once added, you will also see taxis and passengers moving around.
 
 ### Taxis
 
-The *Taxis* tab allows you to add taxis and see detailed information about the taxis your client has added. Where it is, where it is going and what it is doing. It does not show you infomation about taxis added by other clients.
+The *Taxis* tab allows you to add taxis and see detailed information about the taxis your client has added. Where it is, where it is going and what it is doing. It does not show you information about taxis added by other clients.
 
 When a taxi is added it will appear in your list and everyone's *World view*.
 
