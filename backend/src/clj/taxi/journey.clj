@@ -4,6 +4,8 @@
    [clojure.edn :as edn :only [read-string]])
   (:require [taxi.communication :as diffusion]))
 
+(def journey-keep-alive-ms 380000)
+
 (defn- create-journey
   "Create a new journey from the provided state and request."
   [{:keys [last-journey-id] :as state} request]
@@ -22,4 +24,9 @@
     (println "Creating new journey" journey-id)
 
     (diffusion/add-topic (:session @app-state) jackie (str "controller/journey/" journey-id) journey)
+
+    (go
+     (<! (timeout journey-keep-alive-ms))
+     (diffusion/remove-topics (:session @app-state) jackie (str ">controller/journey/" journey-id)))
+
     journey))
