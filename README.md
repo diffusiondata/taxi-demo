@@ -45,3 +45,7 @@ Although Clojure and ClojureScript look like the same language because they depe
 ## Deploying and hosting
 
 The demo is intended to be deployed as two applications to IBM Bluemix and to connect to a Reappt service also created through Bluemix. Manifest files are provided for both the frontend and backend to allow them to be easily deployed to Bluemix.
+
+## Licensing
+
+This project is licenced under Apache License 2.0.
