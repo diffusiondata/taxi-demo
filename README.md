@@ -48,6 +48,26 @@ Although Clojure and ClojureScript look like the same language because they depe
 
 The demo is intended to be deployed as two applications to IBM Bluemix and to connect to a Reappt service also created through Bluemix. Manifest files are provided for both the frontend and backend to allow them to be easily deployed to Bluemix using the CloudFoundry command line tools.
 
+### Prerequisites
+
+1. Git
+2. Leinigen
+3. Bluemix account
+4. CloudFoundry CLI tools
+
+### Instructions
+
+1. Sign into Bluemix
+2. Set up a space for the application
+3. Add a Reappt service to that space
+4. Through the Reappt dashboard add the credentials taxi/taxi with the TOPIC_CONTROL role
+5. Through the Reappt dashboard add the credentials taxi-controller/taxi with the TOPIC_CONTROL role
+6. Use git to clone the repository
+7. Modify the manifest.yml of the front- and backend applications to use the correct Reappt service host
+8. Modify the manifest.yml of the frontend application to use a unique Bluemix routing
+9. Use the Leinigen alias release-build to build both the front- and backend applications
+10. Use the CloudFoundry tools to push the front- and backend applications according to the manifest
+
 ## Licensing
 
 This project is licenced under Apache License 2.0.
