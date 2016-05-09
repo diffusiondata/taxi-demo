@@ -124,8 +124,14 @@
 
 (defn- process-journey-event [app-state journey-event]
   (println "New journey notification " journey-event)
-  (let [journey-id (:journey-id (:value journey-event))]
-    (swap! app-state assoc-in [:global-journeys journey-id] (:value journey-event))))
+  (when (= (:type journey-event) :update)
+    (let [journey-id (:journey-id (:value journey-event))]
+      (swap! app-state assoc-in [:global-journeys journey-id] (:value journey-event))))
+
+  (when (= (:type journey-event) :unsubscribed)
+    (let [id (.parseInt js/window (get (re-matches #"controller/journey/(.*)" (:topic journey-event)) 1))]
+      (when id
+        (swap! state update-in [:global-journeys] dissoc id)))))
 
 (defn init
   "Initialise controller. We don't use the Om component lifecycle because
