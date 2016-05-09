@@ -57,16 +57,16 @@ The demo is intended to be deployed as two applications to IBM Bluemix and to co
 
 ### Instructions
 
-1. Sign into Bluemix
-2. Set up a space for the application
-3. Add a Reappt service to that space
-4. Through the Reappt dashboard add the credentials taxi/taxi with the TOPIC_CONTROL role
-5. Through the Reappt dashboard add the credentials taxi-controller/taxi with the TOPIC_CONTROL role
-6. Use git to clone the repository
-7. Modify the manifest.yml of the front- and backend applications to use the correct Reappt service host
-8. Modify the manifest.yml of the frontend application to use a unique Bluemix routing
-9. Use the Leinigen alias release-build to build both the front- and backend applications
-10. Use the CloudFoundry tools to push the front- and backend applications according to the manifest
+1. Set up a space for the application in Bluemix
+2. Add a Reappt service to that space
+3. Through the Reappt dashboard add the credentials taxi/taxi with the `TOPIC_CONTROL` role
+4. Through the Reappt dashboard add the credentials taxi-controller/taxi with the `TOPIC_CONTROL` role
+5. Use git to clone the repository
+6. Modify the `manifest.yml` of the front- and backend applications to use the correct Reappt service host
+7. Modify the `manifest.yml` of the frontend application to use a unique Bluemix routing
+8. Use the Leinigen alias `release-build` to build both the front- and backend applications
+9. Select the space you added using the CloudFoundry CLI tools
+10. Use the CloudFoundry CLI tools to push the front- and backend applications according to the manifest
 
 ## Licensing
 
