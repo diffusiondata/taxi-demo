@@ -327,16 +327,17 @@
                                               :unsubscribed (process-auction-remove (:topic e) app-state)
                                               :subscribed nil))
 
-          message-chan                 ([e] (d/send-message error session "controller" e))
+          message-chan                 ([e] (d/send-message error session "controller" e)))))
 
-          (timeout world/update-speed) ([_] (swap! app-state move-taxis message-chan))
-        )))
+    (go
+      (while (.isConnected session)
+        (<! (timeout world/update-speed))
+        (swap! app-state move-taxis message-chan)))
 
     (go
       (while (.isConnected session)
         (<! (timeout (+ 1000 (rand-int 1000))))
         (swap! app-state bid-on-auctions message-chan)))
-
 
     ; Register a single session will.
     (d/remove-topics-with-session error session taxi-topic-root)))
