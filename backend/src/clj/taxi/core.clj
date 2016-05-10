@@ -1,7 +1,8 @@
 (ns taxi.core
   (:gen-class)
   (:require [taxi.communication :as diffusion]
-            [taxi.auction :as auction])
+            [taxi.auction :as auction]
+            [taxi.journey :as journey])
   (:use [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
   (:import com.pushtechnology.diffusion.client.session.Session$State))
 
@@ -82,7 +83,9 @@
 
             (cond
               (:state-change event)  (handle-session-state-change (:state-change event) jackie app-state)
-              (:message event)       (auction/process-message app-state jackie (:session-id (:message event)) (:content (:message event)))
+              (:message event)       (do
+                                       (auction/process-message app-state jackie (:session-id (:message event)) (:content (:message event)))
+                                       (journey/process-message app-state jackie (:session-id (:message event)) (:content (:message event))))
               (:topic-add event)     (let [detail (:topic-add event)]
                                        (when (= (:result detail) :failed) (println "Failed to add topic" (:topic-path detail) "because" (:reason detail)))
                                        (when (= (:result detail) :discarded) (println "Topic addition not confirmed for" (:topic-path detail))))
