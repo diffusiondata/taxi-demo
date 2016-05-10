@@ -212,11 +212,6 @@
 
     (assoc app-state :taxis (vec moved))))
 
-(defn- new-bid [e taxi message-chan]
-  (go
-    (<! (timeout (+ 1000 (rand-int 4000))))
-      (>! message-chan (message :bid (generate-new-bid e taxi)))))
-
 (defn- check-taxi-name [n t]
   (= (:name t) n))
 
@@ -247,30 +242,44 @@
           (assoc :state :collecting)
           (assoc :journey-id journey-id))))))
 
-(defn- process-auction-update [e state message-chan]
-  ;; Ignore the last bidder
-  (swap! state assoc-in [:auctions (:id e)] e)
-  (condp = (:auction-state e)
-    ;; Really simple, stateless bidding
-    ;; Pick a random taxi
-    ;; Wait 1-5s
-    ;; If no current bid, start at £10-30
-    ;; Otherwise bid 70-95% of current value.
-    :open (let [bidding-taxis (remove (partial check-taxi-name (:bidder e)) (:taxis @state))]
-            (when (not-empty bidding-taxis)
-              (new-bid e (rand-nth bidding-taxis) message-chan)))
+(defn- taxis-available-to-bid
+  "Return a collection of taxis currently available to bid on auctions.
+  Filters busy taxis and bidders leading an auction."
+  [auctions taxis]
 
-    :offered (process-auction-winner
-               state
-               message-chan
-               (:bidder e)
-               (:bid e)
-               (:location (:journey e))
-               (:destination (:journey e))
-               (:journey-id e)
-               (:id e))
+  (let [leading-bidders (filter #(not (nil? %)) (map #(:bidder %) (vals auctions)))
+        free-taxis (filter #(= (:state %) :roaming) taxis)]
+    (println "Bid leading taxis" leading-bidders)
+    (filter (fn [taxi]
+              (not (some #(= % (:name taxi)) leading-bidders)))
+            free-taxis)))
 
-    nil))
+(defn- process-auction-update [auction state message-chan]
+  ;; Update local state with new value
+  (let [new-state (swap! state assoc-in [:auctions (:id auction)] auction)]
+    (condp = (:auction-state auction)
+      :open (go
+              ;; Wait 1-5s
+              ;; Pick a random, available taxi
+              ;; If no current bid, start at £10-30
+              ;; Otherwise bid 70-95% of current value.
+              (<! (timeout (+ 1000 (rand-int 4000))))
+              (let [bidding-taxis (taxis-available-to-bid (:auctions new-state) (:taxis new-state))]
+                (when (not-empty bidding-taxis)
+                  (let [taxi-to-bid (rand-nth bidding-taxis)]
+                    (send-message message-chan :bid (generate-new-bid auction taxi-to-bid))))))
+
+      :offered (process-auction-winner
+                 state
+                 message-chan
+                 (:bidder auction)
+                 (:bid auction)
+                 (:location (:journey auction))
+                 (:destination (:journey auction))
+                 (:journey-id auction)
+                 (:id auction))
+
+      nil)))
 
 (defn- process-auction-remove [topic-path state]
   (let [id (.parseInt js/window (get (re-matches #"controller/auctions/(.*)" topic-path) 1))]
