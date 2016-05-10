@@ -27,8 +27,9 @@
     (diffusion/update-topic (:session @app-state) auction-chan (str "controller/auctions/" auction-id) auction)
     (go
      (<! (timeout auction-keep-alive-ms))
-     (diffusion/remove-topics (:session @app-state) auction-chan (str ">controller/auctions/" auction-id)))
-    ))
+     ;; Remove local auction state and Diffusion topic
+     (let [new-state (swap! app-state update-in [:auctions] dissoc auction-id)]
+       (diffusion/remove-topics (:session new-state) auction-chan (str ">controller/auctions/" auction-id))))))
 
 (defn- claim-auction
   "Update the app-state with a new auction."
@@ -49,7 +50,7 @@
         auction-id (:last-auction-id new-state)
         auction (get-in new-state [:auctions auction-id])]
 
-    (println "Starting auction" auction-id new-state)
+    (println "Starting auction" auction-id request)
 
     (diffusion/add-topic (:session @app-state) auction-chan (str "controller/auctions/" auction-id) auction)
 

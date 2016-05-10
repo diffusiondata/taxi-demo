@@ -11,8 +11,10 @@
   [keep-alive journey-id jackie app-state]
 
   (go
-     (<! (timeout keep-alive))
-     (diffusion/remove-topics (:session @app-state) jackie (str ">controller/journey/" journey-id))))
+    (<! (timeout keep-alive))
+    ;; Remove local journey state and Diffusion topic
+    (let [new-state (swap! app-state update-in [:journeys] dissoc journey-id)]
+      (diffusion/remove-topics (:session new-state) jackie (str ">controller/journey/" journey-id)))))
 
 (defn- update-journey-topic
   "Update the journey information held by a topic."
