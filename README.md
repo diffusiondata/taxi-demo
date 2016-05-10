@@ -51,7 +51,7 @@ The demo is intended to be deployed as two applications to IBM Bluemix and to co
 ### Prerequisites
 
 1. Git
-2. Leinigen
+2. Leiningen
 3. Bluemix account
 4. CloudFoundry CLI tools
 
@@ -64,7 +64,7 @@ The demo is intended to be deployed as two applications to IBM Bluemix and to co
 5. Use git to clone the repository
 6. Modify the `manifest.yml` of the front- and backend applications to use the correct Reappt service host
 7. Modify the `manifest.yml` of the frontend application to use a unique Bluemix routing
-8. Use the Leinigen alias `release-build` to build both the front- and backend applications
+8. Use the Leiningen alias `release-build` to build both the front- and backend applications
 9. Select the space you added using the CloudFoundry CLI tools
 10. Use the CloudFoundry CLI tools to push the front- and backend applications according to the manifest
 
