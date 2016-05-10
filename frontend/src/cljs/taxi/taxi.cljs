@@ -154,12 +154,14 @@
                     (send-message message-chan :collection-arrival (:journey-id taxi-state))
                     (-> taxi-state
                       (set-destination position speed (:destination (:journey (get (:global-journeys app-state) (:journey-id taxi-state)))))
-                      (assoc :state :carrying)
-                      (dissoc :journey-id)))
+                      (assoc :state :carrying)))
       ; If we are carrying we have arrived near the passenger's destination
-      :carrying (-> taxi-state
+      :carrying (do
+                  (send-message message-chan :passenger-drop-off (:journey-id taxi-state))
+                  (-> taxi-state
                     (stop-taxi-moving)
-                    (assoc :state :roaming))
+                    (assoc :state :roaming)
+                    (dissoc :journey-id)))
       ; Otherwise stop moving the taxi
       (stop-taxi-moving taxi-state))))
 

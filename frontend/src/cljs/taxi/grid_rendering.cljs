@@ -235,12 +235,43 @@
          passengers)))
 
 (defn- waiting-passengers
-  "Returns a sequence containing all the React components that represent a
+  "Returns a sequence containing all the React components that represent
   pending journeys."
   [state]
   (om/build-all
    waiting-passenger
    (gather-journey-info state)))
+
+(defn- passenger-arrival [passenger]
+  "Return a passenger arrival div."
+  (dom/div #js {:className "passengerInfo"
+                :style #js {:left taxi-size
+                            :position "absolute"}}
+           (dom/div nil (dom/span nil
+                                  (str "I have arrived at "
+                                       (util/location-to-string (:destination (:journey passenger))))))))
+
+(defn- arrived-passenger [passenger]
+  "Render a single waiting passenger."
+  (reify om/IRender
+    (render
+     [_]
+     (dom/div #js {:className "passenger"
+                   :style #js {:height taxi-size
+                               :width taxi-size
+                               :left (block-offset
+                                      (nth (:destination (:journey passenger)) 0))
+                               :top  (block-offset
+                                      (nth (:destination (:journey passenger)) 1))}}
+              (passenger-arrival passenger)))))
+
+(defn- arrived-passengers
+  "Returns a sequence containing all the React components that represent
+  completed journeys."
+  [state]
+  (om/build-all
+   arrived-passenger
+   (filter #(= (:journey-state %) :complete) (vals (:global-journeys state)))))
 
 (defn view
   [state owner]
@@ -255,5 +286,7 @@
           (grid state)
           (taxis state)
           (locations state)
-          (waiting-passengers state)))))))
+          (waiting-passengers state)
+          (arrived-passengers state)
+          ))))))
 
