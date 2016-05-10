@@ -162,6 +162,8 @@
                     (stop-taxi-moving)
                     (assoc :state :roaming)
                     (dissoc :journey-id)))
+      ; If we are bidding pick a random destination
+      :bidding (set-destination taxi-state position speed (random-destination))
       ; Otherwise stop moving the taxi
       (stop-taxi-moving taxi-state))))
 
@@ -195,13 +197,7 @@
       (when (<! (d/add-topic error session topic-name [0 0]))
         (om/transact! data :taxis
                       #(for [t %] (if (= (:name t) name) (assoc t :topic topic-name)
-                                      t)))))
-
-    ; Randomly select an open auction to bid on
-    (let [open-auction (rand-nth (vals (:auctions data)))]
-      (when open-auction
-        (d/send-message error session "controller" (message :bid (generate-new-bid open-auction taxi)))
-    ))))
+                                      t)))))))
 
 (defn- move-taxis [{:keys [error session taxis] :as app-state} message-chan]
 
@@ -249,26 +245,29 @@
 
   (let [leading-bidders (filter #(not (nil? %)) (map #(:bidder %) (vals auctions)))
         free-taxis (filter #(= (:state %) :roaming) taxis)]
-    (println "Bid leading taxis" leading-bidders)
     (filter (fn [taxi]
               (not (some #(= % (:name taxi)) leading-bidders)))
             free-taxis)))
 
+(defn- apply-auction-update
+  "Update the auction and taxi state on an auction update."
+  [state auction]
+
+  (let [current-bidder (get-in state [:auctions (:id auction) :bidder])
+        new-bidder (:bidder auction)]
+    (if current-bidder
+      (-> state
+          (modify-taxi current-bidder #(assoc % :state :roaming))
+          (modify-taxi new-bidder #(assoc % :state :bidding))
+          (assoc-in [:auctions (:id auction)] auction))
+      (-> state
+          (modify-taxi new-bidder #(assoc % :state :bidding))
+          (assoc-in [:auctions (:id auction)] auction)))))
+
 (defn- process-auction-update [auction state message-chan]
   ;; Update local state with new value
-  (let [new-state (swap! state assoc-in [:auctions (:id auction)] auction)]
+  (let [new-state (swap! state apply-auction-update auction)]
     (condp = (:auction-state auction)
-      :open (go
-              ;; Wait 1-5s
-              ;; Pick a random, available taxi
-              ;; If no current bid, start at £10-30
-              ;; Otherwise bid 70-95% of current value.
-              (<! (timeout (+ 1000 (rand-int 4000))))
-              (let [bidding-taxis (taxis-available-to-bid (:auctions new-state) (:taxis new-state))]
-                (when (not-empty bidding-taxis)
-                  (let [taxi-to-bid (rand-nth bidding-taxis)]
-                    (send-message message-chan :bid (generate-new-bid auction taxi-to-bid))))))
-
       :offered (process-auction-winner
                  state
                  message-chan
@@ -286,6 +285,18 @@
     (when id
       (swap! state update-in [:auctions] dissoc id))))
 
+(defn- bid-on-auctions
+  "Bid on the open auctions with the available taxis."
+  [state message-chan]
+
+  (let [bidding-taxis (taxis-available-to-bid (:auctions state) (:taxis state))
+        open-auctions (filter #(= :open (:auction-state %)) (vals (:auctions state)))]
+    (if (and (not-empty bidding-taxis) (not-empty open-auctions))
+      (let [taxi-to-bid (rand-nth bidding-taxis)
+            auction-to-bid-on (rand-nth open-auctions)]
+        (send-message message-chan :bid (generate-new-bid auction-to-bid-on taxi-to-bid))
+        (modify-taxi state (:name taxi-to-bid) #(assoc % :state :bidding)))
+      state)))
 
 (defn init [app-state]
   "Initialise taxis. We don't use the Om component lifecycle because
@@ -318,8 +329,13 @@
 
           message-chan                 ([e] (d/send-message error session "controller" e))
 
-          (timeout world/update-speed) ([_] (swap! app-state move-taxis message-chan)))
-        ))
+          (timeout world/update-speed) ([_] (swap! app-state move-taxis message-chan))
+        )))
+
+    (go
+      (while (.isConnected session)
+        (<! (timeout (+ 1000 (rand-int 1000))))
+        (swap! app-state bid-on-auctions message-chan)))
 
 
     ; Register a single session will.
