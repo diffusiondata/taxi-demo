@@ -10,6 +10,7 @@
   "Start the journey."
   [journey-id jackie app-state]
 
+  (println "Starting journey" journey-id)
   (let [new-state (swap! app-state assoc-in [:journeys journey-id :journey-state] :in-progress)
         new-journey (get-in new-state [:journeys journey-id])]
 

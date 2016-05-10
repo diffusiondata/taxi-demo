@@ -81,6 +81,7 @@
   "Process a taxis acknowledgement of the auction win."
   [value app-state]
 
+  (println "Auction result for" (:auction-id value) "acknowledged")
   (swap! app-state assoc-in [:auctions (:auction-id value) :auction-state] :accepted))
 
 (defn process-message
