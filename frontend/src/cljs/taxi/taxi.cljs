@@ -15,6 +15,17 @@
 ;; Taxi states: :roaming, :bidding, :collecting, :carrying
 ;;
 
+(defn- message
+  "Wrap a value in a message of a given type."
+  [type value]
+  {:type type :value value})
+
+(defn- send-message
+  "Send a message."
+  [chan type value]
+
+  (go (>! chan (message type value))))
+
 (defn- random-destination
   "Generates a random destination with the bounds of the world."
   []
@@ -130,7 +141,7 @@
 
 (defn- move-taxi
   "Move the taxi to its next position."
-  [collection-chan app-state {:keys [position route speed state name] :as taxi-state}]
+  [message-chan app-state {:keys [position route speed state name] :as taxi-state}]
 
   (if (seq route)
     ; If there is a current route continue to follow it
@@ -140,7 +151,7 @@
       :roaming (set-destination taxi-state position speed (random-destination))
       ; If we are collecting we have arrived near the passenger
       :collecting (do
-                    (go (>! collection-chan (:journey-id taxi-state)))
+                    (send-message message-chan :collection-arrival (:journey-id taxi-state))
                     (-> taxi-state
                       (set-destination position speed (:destination (:journey (get (:global-journeys app-state) (:journey-id taxi-state)))))
                       (assoc :state :carrying)
@@ -187,22 +198,22 @@
     ; Randomly select an open auction to bid on
     (let [open-auction (rand-nth (vals (:auctions data)))]
       (when open-auction
-        (d/send-message error session "controller" {:type :bid :value (generate-new-bid open-auction taxi)})
+        (d/send-message error session "controller" (message :bid (generate-new-bid open-auction taxi)))
     ))))
 
-(defn- move-taxis [{:keys [error session taxis] :as app-state} collection-chan]
+(defn- move-taxis [{:keys [error session taxis] :as app-state} message-chan]
 
-  (let [moved (map (partial move-taxi collection-chan app-state) taxis)]
+  (let [moved (map (partial move-taxi message-chan app-state) taxis)]
     (doseq [t moved]
       (if-let [{:keys [topic position]} t]
         (d/update-topic error session topic position)))
 
     (assoc app-state :taxis (vec moved))))
 
-(defn- new-bid [e taxi bid-chan]
+(defn- new-bid [e taxi message-chan]
   (go
     (<! (timeout (+ 1000 (rand-int 4000))))
-      (>! bid-chan (generate-new-bid e taxi))))
+      (>! message-chan (message :bid (generate-new-bid e taxi)))))
 
 (defn- check-taxi-name [n t]
   (= (:name t) n))
@@ -218,12 +229,12 @@
     :taxis
     new-taxis)))
 
-(defn- process-auction-winner [state taxi-name bid location destination journey-id auction-id]
+(defn- process-auction-winner [state message-chan taxi-name bid location destination journey-id auction-id]
   ;; Need a way to update the taxi state with a new destination
   (println "And the winner is" taxi-name "at" (util/money-to-string bid))
   (when
     (some (partial check-taxi-name taxi-name) (:taxis @state))
-    (d/send-message (:error @state) (:session @state) "controller" {:type :acknowledge-win :value {:auction-id auction-id}})
+    (send-message message-chan :acknowledge-win {:auction-id auction-id})
     (swap!
       state
       modify-taxi
@@ -234,7 +245,7 @@
           (assoc :state :collecting)
           (assoc :journey-id journey-id))))))
 
-(defn- process-auction-update [e state bid-chan]
+(defn- process-auction-update [e state message-chan]
   ;; Ignore the last bidder
   (swap! state assoc-in [:auctions (:id e)] e)
   (condp = (:auction-state e)
@@ -245,10 +256,11 @@
     ;; Otherwise bid 70-95% of current value.
     :open (let [bidding-taxis (remove (partial check-taxi-name (:bidder e)) (:taxis @state))]
             (when (not-empty bidding-taxis)
-              (new-bid e (rand-nth bidding-taxis) bid-chan)))
+              (new-bid e (rand-nth bidding-taxis) message-chan)))
 
     :offered (process-auction-winner
                state
+               message-chan
                (:bidder e)
                (:bid e)
                (:location (:journey e))
@@ -281,25 +293,21 @@
                         :taxis [])))
         ; Listen for changes to auctions
         auctions (d/subscribe error session "?controller/auctions/")
-        ; Create channel to trigger bid placement
-        bid-chan (chan)
-        ; Create channel to notify controller of collection
-        collection-chan (chan)]
+        ; Create channel to send a message
+        message-chan (chan)]
 
     ; Setup go routines to update the taxi positions and react to events
     (go
       (while (.isConnected session)
         (alt!
           auctions                     ([e] (condp = (:type e)
-                                              :update (process-auction-update (:value e) app-state bid-chan)
+                                              :update (process-auction-update (:value e) app-state message-chan)
                                               :unsubscribed (process-auction-remove (:topic e) app-state)
                                               :subscribed nil))
 
-          bid-chan                     ([e] (d/send-message error session "controller" {:type :bid :value e}))
+          message-chan                 ([e] (d/send-message error session "controller" e))
 
-          collection-chan              ([e] (d/send-message error session "controller" {:type :collection-arrival :value e}))
-
-          (timeout world/update-speed) ([_] (swap! app-state move-taxis collection-chan)))
+          (timeout world/update-speed) ([_] (swap! app-state move-taxis message-chan)))
         ))
 
 
