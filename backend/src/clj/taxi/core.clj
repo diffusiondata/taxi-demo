@@ -54,8 +54,7 @@
          (= new-state
             Session$State/CONNECTED_ACTIVE))
     (swap! app-state assoc :session session)
-    (diffusion/register-message-handler session jackie "controller/auctions")
-    (diffusion/register-message-handler session jackie "controller/collection")
+    (diffusion/register-message-handler session jackie "controller")
     (diffusion/remove-topics-with-session session jackie "controller/auctions")
     (diffusion/remove-topics-with-session session jackie "controller/journey"))
 

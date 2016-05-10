@@ -99,7 +99,7 @@
     (when (and start end)
       (let [{:keys [error session passenger]} data
             request (journey-request (:passenger data) start end)]
-        (d/send-message error session "controller/auctions" {:type :journey :value request})))))
+        (d/send-message error session "controller" {:type :journey :value request})))))
 
 (defn- new-journey-form-event [event data owner]
   (new-journey data owner)

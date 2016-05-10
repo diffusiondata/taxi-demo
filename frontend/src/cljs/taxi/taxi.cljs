@@ -187,7 +187,7 @@
     ; Randomly select an open auction to bid on
     (let [open-auction (rand-nth (vals (:auctions data)))]
       (when open-auction
-        (d/send-message error session "controller/auctions" {:type :bid :value (generate-new-bid open-auction taxi)})
+        (d/send-message error session "controller" {:type :bid :value (generate-new-bid open-auction taxi)})
     ))))
 
 (defn- move-taxis [{:keys [error session taxis] :as app-state} collection-chan]
@@ -223,7 +223,7 @@
   (println "And the winner is" taxi-name "at" (util/money-to-string bid))
   (when
     (some (partial check-taxi-name taxi-name) (:taxis @state))
-    (d/send-message (:error @state) (:session @state) "controller/auctions" {:type :accept-journey})
+    (d/send-message (:error @state) (:session @state) "controller" {:type :accept-journey})
     (swap!
       state
       modify-taxi
@@ -288,9 +288,9 @@
                                               :unsubscribed (process-auction-remove (:topic e) app-state)
                                               :subscribed nil))
 
-          bid-chan                     ([e] (d/send-message error session "controller/auctions" {:type :bid :value e}))
+          bid-chan                     ([e] (d/send-message error session "controller" {:type :bid :value e}))
 
-          collection-chan              ([e] (d/send-message error session "controller/collection" {:type :collection-arrival :value e}))
+          collection-chan              ([e] (d/send-message error session "controller" {:type :collection-arrival :value e}))
 
           (timeout world/update-speed) ([_] (swap! app-state move-taxis collection-chan)))
         ))
