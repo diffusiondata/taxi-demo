@@ -218,12 +218,12 @@
     :taxis
     new-taxis)))
 
-(defn- process-auction-winner [state taxi-name bid location destination journey-id]
+(defn- process-auction-winner [state taxi-name bid location destination journey-id auction-id]
   ;; Need a way to update the taxi state with a new destination
   (println "And the winner is" taxi-name "at" (util/money-to-string bid))
   (when
     (some (partial check-taxi-name taxi-name) (:taxis @state))
-    (d/send-message (:error @state) (:session @state) "controller" {:type :accept-journey})
+    (d/send-message (:error @state) (:session @state) "controller" {:type :acknowledge-win :value {:auction-id auction-id}})
     (swap!
       state
       modify-taxi
@@ -247,9 +247,16 @@
             (when (not-empty bidding-taxis)
               (new-bid e (rand-nth bidding-taxis) bid-chan)))
 
-    :offered (process-auction-winner state (:bidder e) (:bid e) (:location (:journey e)) (:destination (:journey e)) (:journey-id e))
+    :offered (process-auction-winner
+               state
+               (:bidder e)
+               (:bid e)
+               (:location (:journey e))
+               (:destination (:journey e))
+               (:journey-id e)
+               (:id e))
 
-    (println "Ignoring " e)))
+    nil))
 
 (defn- process-auction-remove [topic-path state]
   (let [id (.parseInt js/window (get (re-matches #"controller/auctions/(.*)" topic-path) 1))]

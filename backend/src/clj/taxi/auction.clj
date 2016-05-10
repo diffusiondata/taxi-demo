@@ -77,9 +77,11 @@
         current-auction (get-in new-state [:auctions id])]
     (diffusion/update-topic (:session @app-state) auction-chan (str "controller/auctions/" id) current-auction)))
 
-(defn- journey-accepted
-  ""
-  [value])
+(defn- auction-win-acknowledged
+  "Process a taxis acknowledgement of the auction win."
+  [value app-state]
+
+  (swap! app-state assoc-in [:auctions (:auction-id value) :auction-state] :accepted))
 
 (defn process-message
   "Process message events taken from the channel.
@@ -89,5 +91,5 @@
   (condp = type
     :journey  (start-auction value auction-chan app-state)
     :bid      (update-auction value session-id auction-chan app-state)
-    :accept-journey (journey-accepted value)
+    :acknowledge-win (auction-win-acknowledged value app-state)
     nil))
