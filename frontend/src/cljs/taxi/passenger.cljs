@@ -17,7 +17,7 @@
 
 (def next-id (atom 0))
 
-(defn- new-journey
+(defn- create-new-journey
   "Create a new journey"
   [error session]
 
@@ -29,7 +29,7 @@
      }))
 
 (defn- add-journey [{:keys [error session journeys] :as data}]
-  (om/transact! data :journeys #(conj % (new-journey error session))))
+  (om/transact! data :journeys #(conj % (create-new-journey error session))))
 
 (defn- process-event [v]
   (println "RECEIVED " v))

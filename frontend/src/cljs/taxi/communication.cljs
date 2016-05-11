@@ -12,17 +12,19 @@
   (apply error s))
 
 
-(defn- to-event [p]
+(defn- to-event
   "We marshall cljs objects as EDN"
+  [p]
 
   ; Unfortunately "" -> "\"\"", which causes addTopic to choke.
   ; addTopic may not like other quoting too.
 
   (pr-str p))
 
-(defn- from-event [d]
+(defn- from-event
   "We marshall cljs objects as EDN"
-  (cljs.reader/read-string (js/String. d)))
+  [d]
+  (edn/read-string (.toString d)))
 
 (defn connect
   "Create a new Diffusion session using the given options.
@@ -112,13 +114,6 @@
               #(fail out error "add topic failed" %1)))
 
     out))
-
-
-(defn- to-event [p]
-  (pr-str p))
-
-(defn- from-event [d]
-  (edn/read-string (.toString d)))
 
 (defn update-topic
   "Use `session` to update topic `topic-name` with `value`.
