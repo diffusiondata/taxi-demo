@@ -22,6 +22,8 @@
 
 (def taxi-update-period-ms 250)
 
+(def taxi-update-period (/ taxi-update-period-ms 1000))
+
 (def frames-per-second 30)
 
 (def frame-time (/ 1000 frames-per-second))

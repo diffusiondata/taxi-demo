@@ -78,46 +78,56 @@
     :down  [start [x1 (dec y1)] :down]
     nil nil))
 
-(defn- steps [from to]
+(defn- steps
+  "Takes two positions and finds a route between them. The route is described
+  as a sequence of evenly spaced positions and direction of travel."
+  [from to]
+
   (lazy-seq
    (if-let [s (step from to)]
      (cons s (steps (s 1) to))
      [[from to nil]])))
 
 (defn- steps-to-updates
-  "Takes a route to a destination and a speed and returns a sequence of
-  positions and directions mostly at regular intervals. The last value is the
-  destination and might be reached at an irregular time. The intervals should
-  match the update frequency of the taxis."
-  ([route speed] (steps-to-updates route speed speed))
-  ([route speed distance]
+  "Takes a route to a destination and a distance and returns the same route
+  but with the distance between positions changed to the provided distance."
+  ([route distance-per-update] (steps-to-updates route distance-per-update distance-per-update))
+  ([route distance-per-update distance-remaining]
    (let [[[sx sy] [ex ey] dir] (first route)]
      (condp = dir
-       :up    (if (> ey (+ sy distance))
-                (cons [sx (+ sy distance) :up]
+       :up    (if (> ey (+ sy distance-remaining))
+                (cons [sx (+ sy distance-remaining) :up]
                       (steps-to-updates
-                        (cons [[sx (+ sy distance)] [ex ey] :up]
-                              (next route)) speed))
-                (steps-to-updates (next route) speed (- (+ sy distance) ey)))
-       :down  (if (< ey (- sy distance))
-                (cons [sx (- sy distance) :down]
+                        (cons [[sx (+ sy distance-remaining)] [ex ey] :up]
+                              (next route)) distance-per-update))
+                (steps-to-updates (next route) distance-per-update (- (+ sy distance-remaining) ey)))
+       :down  (if (< ey (- sy distance-remaining))
+                (cons [sx (- sy distance-remaining) :down]
                       (steps-to-updates
-                        (cons [[sx (- sy distance)] [ex ey] :down]
-                              (next route)) speed))
-                (steps-to-updates (next route) speed (- distance (- sy ey))))
-       :left  (if (< ex (- sx distance))
-                (cons [(- sx distance) sy :left]
+                        (cons [[sx (- sy distance-remaining)] [ex ey] :down]
+                              (next route)) distance-per-update))
+                (steps-to-updates (next route) distance-per-update (- distance-remaining (- sy ey))))
+       :left  (if (< ex (- sx distance-remaining))
+                (cons [(- sx distance-remaining) sy :left]
                       (steps-to-updates
-                        (cons [[(- sx distance) sy] [ex ey] :left]
-                              (next route)) speed))
-                (steps-to-updates (next route) speed (- distance (- sx ex))))
-       :right (if (> ex (+ sx distance))
-                (cons [(+ sx distance) sy :right]
+                        (cons [[(- sx distance-remaining) sy] [ex ey] :left]
+                              (next route)) distance-per-update))
+                (steps-to-updates (next route) distance-per-update (- distance-remaining (- sx ex))))
+       :right (if (> ex (+ sx distance-remaining))
+                (cons [(+ sx distance-remaining) sy :right]
                       (steps-to-updates
-                        (cons [[(+ sx distance) sy] [ex ey] :right]
-                              (next route)) speed))
-                (steps-to-updates (next route) speed (- (+ sx distance) ex)))
+                        (cons [[(+ sx distance-remaining) sy] [ex ey] :right]
+                              (next route)) distance-per-update))
+                (steps-to-updates (next route) distance-per-update (- (+ sx distance-remaining) ex)))
        nil [[ex ey]]))))
+
+(defn- route
+  "Takes two positions, a travel speed and an update period. Returns a route
+  from the first position to the second postions as a sequence of positions
+  and directions reached at multiples of the update period."
+  [position destination speed update-period]
+
+  (steps-to-updates (steps (quantise position) destination) (* speed update-period)))
 
 (defn- set-destination
   "Set the destination for a taxi and selects a route to it from the current position."
@@ -125,7 +135,7 @@
 
   (-> taxi-state
       (assoc :destination new-destination)
-      (assoc :route (steps-to-updates (steps (quantise position) new-destination) (* speed (/ world/taxi-update-period-ms 1000))))))
+      (assoc :route (route position new-destination speed world/taxi-update-period))))
 
 (defn- stop-taxi-moving
   "Stop the taxi from moving. Clear the route."
