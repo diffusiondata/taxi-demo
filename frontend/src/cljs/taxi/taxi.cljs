@@ -377,7 +377,7 @@
     (render [_]
       (let [{:keys [name position destination route speed state display-name]} taxi]
         (p/panel
-         {:header (str "Taxi " display-name " " name)}
+         {:header (str "Taxi " display-name)}
 
          (dom/table #js { :className "table" }
                     (dom/thead nil
