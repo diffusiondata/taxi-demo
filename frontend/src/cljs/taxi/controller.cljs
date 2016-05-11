@@ -23,14 +23,17 @@
      (js/Math.abs (- (nth new-position 1) (nth old-position 1)))))
 
 (defn- taxi-update
-  [id new-position state]
-  (if new-position
+  [id update state]
+  (if update
       (let [updated-taxi (get (:all-taxis state) id)
-            current-time (.getTime (js/Date.))]
+            current-time (.getTime (js/Date.))
+            new-position (:position update)
+            display-name (:display-name update)]
         (assoc-in state [:all-taxis id]
             (if (nil? (:known-position updated-taxi))
                 ; Update a taxi for the first time
                 (assoc updated-taxi
+                  :display-name display-name
                   :known-position new-position
                   :position new-position
                   :timestamp current-time
@@ -40,6 +43,7 @@
                 (let [old-position (:known-position updated-taxi)
                       estimated-speed (calculate-speed old-position new-position)]
                   (assoc updated-taxi
+                    :display-name display-name
                     :known-position new-position
                     :position new-position
                     :estimated-speed estimated-speed

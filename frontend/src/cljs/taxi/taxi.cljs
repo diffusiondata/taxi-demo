@@ -189,12 +189,12 @@
   (let [{:keys [error session taxi-topic-root]} data
         name (next-taxi-name data)
         topic-name (str taxi-topic-root "/" name)
-        taxi {:name name :speed (+ 0.2 (rand 0.5)) :state :roaming}]
+        taxi {:name name :speed (+ 0.2 (rand 0.5)) :state :roaming :display-name (util/new-name)}]
 
     (om/transact! data :taxis #(conj % taxi))
 
     (go
-      (when (<! (d/add-topic error session topic-name [0 0]))
+      (when (<! (d/add-topic error session topic-name {:display-name (:display-name taxi) :position [0 0]}))
         (om/transact! data :taxis
                       #(for [t %] (if (= (:name t) name) (assoc t :topic topic-name)
                                       t)))))))
@@ -203,8 +203,8 @@
 
   (let [moved (map (partial move-taxi message-chan app-state) taxis)]
     (doseq [t moved]
-      (if-let [{:keys [topic position]} t]
-        (d/update-topic error session topic position)))
+      (if-let [{:keys [topic position display-name]} t]
+        (d/update-topic error session topic {:display-name display-name :position position})))
 
     (assoc app-state :taxis (vec moved))))
 
@@ -358,9 +358,9 @@
   (reify
     om/IRender
     (render [_]
-      (let [{:keys [name position destination route speed state]} taxi]
+      (let [{:keys [name position destination route speed state display-name]} taxi]
         (p/panel
-         {:header (str "Taxi " name) }
+         {:header (str "Taxi " display-name " " name)}
 
          (dom/table #js { :className "table" }
                     (dom/thead nil

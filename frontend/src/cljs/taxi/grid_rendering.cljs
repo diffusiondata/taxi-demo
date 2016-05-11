@@ -154,7 +154,8 @@
                             :left taxi-size}}
            (apply dom/table
                   nil
-                  (taxi-info-facts taxi [[:direction "Direction" util/direction-to-string]
+                  (taxi-info-facts taxi [[:display-name "Name" identity]
+                                         [:direction "Direction" util/direction-to-string]
                                          [:estimated-speed "Estimated speed" (partial util/float-to-string 2)]
                                          [:position "Position" util/location-to-string]
                                          [:known-position "Last known position" util/location-to-string]
@@ -198,7 +199,8 @@
                 :style #js {:left taxi-size
                             :position "absolute"}}
            (dom/div nil (dom/span nil
-                                  (str "I want to go to "
+                                  (str (:display-name passenger)
+                                       " wants to go to "
                                        (util/location-to-string (:destination (:journey passenger))))))
            (if (not (nil? (:bid passenger)))
              (dom/div nil (dom/span nil
@@ -248,7 +250,8 @@
                 :style #js {:left taxi-size
                             :position "absolute"}}
            (dom/div nil (dom/span nil
-                                  (str "I have arrived at "
+                                  (str (:display-name passenger)
+                                       " has arrived at "
                                        (util/location-to-string (:destination (:journey passenger))))))))
 
 (defn- arrived-passenger [passenger]

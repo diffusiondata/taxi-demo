@@ -46,11 +46,11 @@
   [request auction-chan app-state]
 
   (let [journey (journey/new-journey request auction-chan app-state)
-        new-state (swap! app-state claim-auction request journey)
+        new-state (swap! app-state claim-auction (:journey request) journey)
         auction-id (:last-auction-id new-state)
         auction (get-in new-state [:auctions auction-id])]
 
-    (println "Starting auction" auction-id request)
+    (println "Starting auction" auction-id (:journey request))
 
     (diffusion/add-topic (:session @app-state) auction-chan (str "controller/auctions/" auction-id) auction)
 

@@ -3,8 +3,8 @@
    [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
   (:require [taxi.communication :as diffusion]))
 
-(def journey-max-keep-alive-ms 380000)
-(def journey-completed-keep-alive-ms 5000)
+(def ^:private journey-max-keep-alive-ms 380000)
+(def ^:private journey-completed-keep-alive-ms 5000)
 
 (defn- go-remove-journey-topic
   "Remove the journey topic after a peroid of time."
@@ -48,7 +48,7 @@
   [{:keys [last-journey-id] :as state} request]
 
   (let [journey-id (inc last-journey-id)
-        journey {:journey-id journey-id :journey request :journey-state :pending}]
+        journey {:journey-id journey-id :display-name (:display-name request) :journey (:journey request) :journey-state :pending}]
     (-> state
         (assoc-in [:journeys journey-id] journey)
         (assoc :last-journey-id journey-id))))

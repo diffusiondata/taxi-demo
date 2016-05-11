@@ -3,6 +3,7 @@
 
     (:require [taxi.communication :as d]
               [taxi.world :as world]
+              [taxi.util :as util]
               [om.core :as om :include-macros true]
               [om.dom :as dom :include-macros true]
               [om-bootstrap.input :as i]
@@ -89,8 +90,9 @@
 
 (defn- journey-request [p location destination]
   {:passenger p
-   :location location
-   :destination destination})
+   :display-name (util/new-name)
+   :journey {:location location
+             :destination destination}})
 
 (defn- new-journey [data owner]
   (let [start (-> (om/get-node owner "start") .-value parse-location)

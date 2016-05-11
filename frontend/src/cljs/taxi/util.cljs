@@ -11,3 +11,14 @@
 
 (defn money-to-string [d]
   (when d (str "£" (.toFixed d 2))))
+
+(def ^:private names ["matt", "phil", "lee", "Tom", "Matt", "Phil", "Lee", "CaptainAwesome"])
+
+(defn- generate-suffix []
+  (.toLowerCase (.toString (js/Math.round (* 1000 (js/Math.random))) 16)))
+
+(defn new-name
+  "Randomly geneate a new human readable name."
+  []
+
+  (str (rand-nth names) (generate-suffix)))
