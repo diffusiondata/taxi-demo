@@ -1,8 +1,9 @@
 (ns taxi.communication
   (:gen-class)
   (:use
-   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]]
-   [clojure.edn :as edn :only [read-string]])
+   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
+  (:require
+   [clojure.edn :as edn])
   (:import com.pushtechnology.diffusion.client.Diffusion
            com.pushtechnology.diffusion.client.session.Session
            com.pushtechnology.diffusion.client.session.Session$Listener

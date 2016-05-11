@@ -1,7 +1,6 @@
 (ns taxi.auction
   (:use
-   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]]
-   [clojure.edn :as edn :only [read-string]])
+   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
   (:require [taxi.communication :as diffusion]
             [taxi.journey :as journey]))
 
