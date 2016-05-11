@@ -30,10 +30,6 @@ With both taxis and passengers present the *View auctions* tab shows the state o
 
 Passengers will eventually give up. If you add a passenger without any taxis or enough taxis they will eventually be removed by the backend.
 
-##### Where it goes wrong
-
-Currently taxis do not restrict themselves to bidding on one journey. The original idea was to allow taxis to bid on multiple journeys and once offered to accept or reject it. Causing either a second auction or the second place to win the bid. Currently the last won auction will trump the earlier ones.
-
 ## Implementation
 
 The taxi demo is divided into two parts, a frontend and a backend.
