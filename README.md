@@ -1,4 +1,4 @@
-# Taxi Demo
+# "Unter" Taxi Demo
 
 A demo for Reappt and Bluemix themed on taxis.
 
@@ -46,10 +46,10 @@ The demo is intended to be deployed as two applications to IBM Bluemix and to co
 
 ### Prerequisites
 
-1. Git
-2. Leiningen
-3. Bluemix account
-4. CloudFoundry CLI tools
+1. [Git](https://git-scm.com/)
+2. [Leiningen](http://leiningen.org/)
+3. [Bluemix account](https://console.ng.bluemix.net/)
+4. [CloudFoundry CLI tools](https://github.com/cloudfoundry/cli)
 
 ### Instructions
 
