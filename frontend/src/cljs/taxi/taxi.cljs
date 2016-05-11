@@ -194,6 +194,7 @@
   (let [current (:bid current-bidding)]
     (assoc current-bidding
       :bidder (:name taxi)
+      :bidder-display-name (:display-name taxi)
       :bid (if current
              (* current (+ 0.7 (rand 0.25)))
              (+ 10 (rand 20))))))

@@ -84,7 +84,7 @@
   (reify
     om/IRender
     (render [_]
-      (let [{:keys [id bid bidder auction-state]
+      (let [{:keys [id bid bidder-display-name auction-state]
              {:keys [location destination passenger]} :journey} @auction]
         (dom/tr nil
                 (dom/td nil id)
@@ -93,7 +93,7 @@
                 (dom/td nil (util/location-to-string location))
                 (dom/td nil (util/location-to-string destination))
                 (dom/td nil (util/money-to-string bid))
-                (dom/td nil bidder)
+                (dom/td nil bidder-display-name)
                 )))))
 
 (defn auctions-view [data _]

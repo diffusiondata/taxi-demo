@@ -61,7 +61,7 @@
   [request auction-chan app-state]
 
   (let [journey (journey/new-journey request auction-chan app-state)
-        new-state (swap! app-state claim-auction (:journey request) journey)
+        new-state (swap! app-state claim-auction (assoc (:journey request) :passenger (:display-name request)) journey)
         auction-id (:last-auction-id new-state)
         auction (get-in new-state [:auctions auction-id])]
 
