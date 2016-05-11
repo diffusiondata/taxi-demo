@@ -379,11 +379,11 @@
 
          (dom/table #js { :className "table" }
                     (dom/thead nil
-                               (dom/th nil "Position")
-                               (dom/th nil "Direction")
-                               (dom/th nil "Speed")
-                               (dom/th nil "Destination")
-                               (dom/th nil "State")
+                               (dom/th #js {:style #js {:width "15%"}} "Position")
+                               (dom/th #js {:style #js {:width "15%"}} "Direction")
+                               (dom/th #js {:style #js {:width "15%"}} "Speed")
+                               (dom/th #js {:style #js {:width "15%"}} "Destination")
+                               (dom/th #js {:style #js {:width "15%"}} "State")
                                )
                     (dom/tbody nil
                                (dom/tr nil

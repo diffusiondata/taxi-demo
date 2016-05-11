@@ -88,13 +88,13 @@
       (let [{:keys [id bid bidder-display-name auction-state]
              {:keys [location destination passenger]} :journey} @auction]
         (dom/tr nil
-                (dom/td nil id)
-                (dom/td nil (name auction-state))
-                (dom/td nil passenger)
-                (dom/td nil (util/location-to-string location))
-                (dom/td nil (util/location-to-string destination))
-                (dom/td nil (util/money-to-string bid))
-                (dom/td nil bidder-display-name)
+                (dom/td #js {:style #js {:width "5%"}} id)
+                (dom/td #js {:style #js {:width "15%"}} (name auction-state))
+                (dom/td #js {:style #js {:width "15%"}} passenger)
+                (dom/td #js {:style #js {:width "10%"}} (util/location-to-string location))
+                (dom/td #js {:style #js {:width "10%"}} (util/location-to-string destination))
+                (dom/td #js {:style #js {:width "15%"}} (util/money-to-string bid))
+                (dom/td #js {:style #js {:width "15%"}} bidder-display-name)
                 )))))
 
 (defn auctions-view [data _]
