@@ -84,23 +84,11 @@
      (cons s (steps (s 1) to))
      [[from to nil]])))
 
-(defn- interpolate [route speed]
-  "Takes a route to a destination and a speed and returns a sequence of
-  positions and directions. The returned sequence always includes the points
-  of the route and may include points inbetween them."
-  (for [[[x y] _e dir] route
-        d (if dir (range 0 1 speed) [:last])]
-    (condp = dir
-      :up    [x (+ y d) :up]
-      :down  [x (- y d) :down]
-      :left  [(- x d) y :left]
-      :right [(+ x d) y :right]
-      nil [x y])))
-
 (defn- steps-to-updates
   "Takes a route to a destination and a speed and returns a sequence of
   positions and directions mostly at regular intervals. The last value is the
-  destination and might be reached at an irregular time."
+  destination and might be reached at an irregular time. The intervals should
+  match the update frequency of the taxis."
   ([route speed] (steps-to-updates route speed speed))
   ([route speed distance]
    (let [[[sx sy] [ex ey] dir] (first route)]
@@ -137,7 +125,7 @@
 
   (-> taxi-state
       (assoc :destination new-destination)
-      (assoc :route (steps-to-updates (steps (quantise position) new-destination) speed))))
+      (assoc :route (steps-to-updates (steps (quantise position) new-destination) (* speed (/ world/taxi-update-period-ms 1000))))))
 
 (defn- stop-taxi-moving
   "Stop the taxi from moving. Clear the route."
@@ -206,7 +194,7 @@
   (let [{:keys [error session taxi-topic-root]} data
         name (next-taxi-name data)
         topic-name (str taxi-topic-root "/" name)
-        taxi {:name name :speed (+ 0.2 (rand 0.5)) :state :roaming :display-name (util/new-name)}]
+        taxi {:name name :speed (+ 0.4 (rand 0.5)) :state :roaming :display-name (util/new-name)}]
 
     (om/transact! data :taxis #(conj % taxi))
 
@@ -339,16 +327,16 @@
     (go
       (while (.isConnected session)
         (alt!
-          auctions                     ([e] (condp = (:type e)
-                                              :update (process-auction-update (:value e) app-state message-chan)
-                                              :unsubscribed (process-auction-remove (:topic e) app-state)
-                                              :subscribed nil))
+          auctions     ([e] (condp = (:type e)
+                              :update (process-auction-update (:value e) app-state message-chan)
+                              :unsubscribed (process-auction-remove (:topic e) app-state)
+                              :subscribed nil))
 
-          message-chan                 ([e] (d/send-message error session "controller" e)))))
+          message-chan ([e] (d/send-message error session "controller" e)))))
 
     (go
       (while (.isConnected session)
-        (<! (timeout world/update-speed))
+        (<! (timeout world/taxi-update-period-ms))
         (swap! app-state move-taxis message-chan)))
 
     (go

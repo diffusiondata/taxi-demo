@@ -20,9 +20,7 @@
 
 (def grid-height 6)
 
-(def update-speed 1000)
-
-(def taxi-speed 0.25)
+(def taxi-update-period-ms 250)
 
 (def frames-per-second 30)
 

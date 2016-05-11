@@ -35,8 +35,9 @@
 
 (defn- calculate-speed
   [old-position new-position]
-  (+ (js/Math.abs (- (nth new-position 0) (nth old-position 0)))
-     (js/Math.abs (- (nth new-position 1) (nth old-position 1)))))
+  (* (+ (js/Math.abs (- (nth new-position 0) (nth old-position 0)))
+        (js/Math.abs (- (nth new-position 1) (nth old-position 1))))
+     (/ 1000 world/taxi-update-period-ms)))
 
 (defn- taxi-update
   [id update state]
@@ -124,7 +125,7 @@
     (assoc new-map id taxi)
     (let [x (nth position 0)
           y (nth position 1)
-          step (/ estimated-speed world/frames-per-second)
+          step (* (/ estimated-speed 1000) world/frame-time)
           age (- (.getTime (js/Date.)) (:timestamp taxi))]
       (if (not (= 3 (count position)))
         (assoc new-map id taxi)
