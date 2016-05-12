@@ -2,7 +2,7 @@
 
 A demo for Reappt and Bluemix themed on taxis.
 
-The demo models a small town, passengers and taxis. When a passenger appears taxis can bid on the opportunity to give them a ride. The winning taxi collects and delivers the passenger and gets paid the fair.
+The demo models a small town, passengers and taxis. When a passenger appears taxis can bid on the opportunity to give them a ride. The winning taxi collects and delivers the passenger and gets paid the fare.
 
 ## Using the demo
 
@@ -18,7 +18,7 @@ The *Taxis* tab allows you to add taxis and see detailed information about the t
 
 When a taxi is added it will appear in the list on your *Taxis* page and everyone's *World view* but no one elses *Taxis* list.
 
-Taxi behaviour defaults to roaming around the town looking for fares. When they are not collecting or carrying a passenger they continually pick a random destination and travel there. When they have a fair they first travel to the start of the journey, collect the passenger and then travel to the destination. Once the taxi reaches the destination they start roaming again.
+Taxi behaviour defaults to roaming around the town looking for fares. When they are not collecting or carrying a passenger they continually pick a random destination and travel there. When they have a fare they first travel to the start of the journey, collect the passenger and then travel to the destination. Once the taxi reaches the destination they start roaming again.
 
 ### Passengers and Auctions
 
