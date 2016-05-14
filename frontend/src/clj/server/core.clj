@@ -21,16 +21,19 @@
             [ring.middleware.not-modified :as etag]
             [ring.util.response :as resp]))
 
+;; This populates the js/endpoint.js. It sets targeted Reappt server based on
+;; the environmental variables REAPPT_HOST, REAPPT_PORT and REAPPT_SECURE.
+;; If defaults to localhost:8080
 (def endpoint
   (str
     "window.reapptHost = '"
-    (.get (System/getenv) "REAPPT_HOST")
+    (or (.get (System/getenv) "REAPPT_HOST") "localhost")
     "';\n"
     "window.reapptPort = '"
-    (.get (System/getenv) "REAPPT_PORT")
+    (or (.get (System/getenv) "REAPPT_PORT") "8080")
     "';\n"
     "window.reapptSecure = "
-    (.get (System/getenv) "REAPPT_SECURE")
+    (or (.get (System/getenv) "REAPPT_SECURE") "false")
     ";\n"))
 
 (defroutes app-routes

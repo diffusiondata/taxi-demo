@@ -42,20 +42,22 @@
 ;; reset, and a new bidding round will start. If the bidder
 ;; accepts the auction will change to accepted
 
-(def local-connection "ws://localhost:8080")
-(def reappt-connection "wss://pushingstrikingAres.us.reappt.io:443")
-(def env-connection
+
+;; The connection URL, it sets targeted Reappt server based on the
+;; environmental variables REAPPT_HOST, REAPPT_PORT and REAPPT_SECURE.
+;; If defaults to localhost:8080
+(def reappt-url
   (str
     (if (= (.get (System/getenv) "REAPPT_SECURE") "true") "wss://" "ws://")
-    (.get (System/getenv) "REAPPT_HOST")
+    (or (.get (System/getenv) "REAPPT_HOST") "localhost")
     ":"
-    (.get (System/getenv) "REAPPT_PORT")))
+    (or (.get (System/getenv) "REAPPT_PORT") "8080")))
 
 (defn- create-session
   "Create a new session from the session factory."
   [session-factory]
 
-  (.open session-factory env-connection))
+  (.open session-factory reappt-url))
 
 (defn- handle-session-state-change
   "Handle state change event.
