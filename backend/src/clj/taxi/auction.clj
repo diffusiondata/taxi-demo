@@ -95,10 +95,14 @@
 
 (defn- auction-win-acknowledged
   "Process a taxis acknowledgement of the auction win."
-  [value app-state]
+  [auction-chan value app-state]
 
-  (println "Auction result for" (:auction-id value) "acknowledged")
-  (swap! app-state assoc-in [:auctions (:auction-id value) :auction-state] :accepted))
+  (let [auction-id (:auction-id value)
+        new-state (swap! app-state assoc-in [:auctions auction-id :auction-state] :accepted)
+        current-auction (get-in new-state [:auctions auction-id])]
+    (println "Auction result for" auction-id "acknowledged " current-auction)
+    (diffusion/update-topic (:session @app-state) auction-chan (str "controller/auctions/" auction-id) current-auction)
+    ))
 
 (defn process-message
   "Process message events taken from the channel.
@@ -108,5 +112,5 @@
   (condp = type
     :journey  (start-auction value auction-chan app-state)
     :bid      (update-auction value session-id auction-chan app-state)
-    :acknowledge-win (auction-win-acknowledged value app-state)
+    :acknowledge-win (auction-win-acknowledged auction-chan value app-state)
     nil))

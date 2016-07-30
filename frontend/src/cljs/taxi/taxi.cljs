@@ -268,16 +268,20 @@
   "Update the auction and taxi state on an auction update."
   [state auction]
 
-  (let [current-bidder (get-in state [:auctions (:id auction) :bidder])
-        new-bidder (:bidder auction)]
-    (if current-bidder
-      (-> state
-          (modify-taxi current-bidder #(assoc % :state :roaming))
-          (modify-taxi new-bidder #(assoc % :state :bidding))
-          (assoc-in [:auctions (:id auction)] auction))
-      (-> state
-          (modify-taxi new-bidder #(assoc % :state :bidding))
-          (assoc-in [:auctions (:id auction)] auction)))))
+  (condp = (:auction-state auction)
+    :accepted (assoc-in state [:auctions (:id auction)] auction)
+    :offered (assoc-in state [:auctions (:id auction)] auction)
+
+    (let [current-bidder (get-in state [:auctions (:id auction) :bidder])
+          new-bidder (:bidder auction)]
+      (if current-bidder
+        (-> state
+            (modify-taxi current-bidder #(assoc % :state :roaming))
+            (modify-taxi new-bidder #(assoc % :state :bidding))
+            (assoc-in [:auctions (:id auction)] auction))
+        (-> state
+            (modify-taxi new-bidder #(assoc % :state :bidding))
+            (assoc-in [:auctions (:id auction)] auction))))))
 
 (defn- process-auction-update [auction state message-chan]
   ;; Update local state with new value
