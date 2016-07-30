@@ -19,7 +19,29 @@
   (:require [compojure.handler :as handler]
             [compojure.route :as route]
             [ring.middleware.not-modified :as etag]
-            [ring.util.response :as resp]))
+            [ring.util.response :as resp]
+            [clojure.data.json :as json]))
+
+(def vcap-services
+  (let [vcap-services-string (.get (System/getenv) "VCAP_SERVICES")]
+    (if vcap-services-string
+      (json/read-str vcap-services-string)
+      nil)))
+
+(def session-principal
+  (or (get-in vcap-services ["push-reappt" 0 "credentials" "principal"]) "taxi"))
+
+(def session-credential
+  (or (get-in vcap-services ["push-reappt" 0 "credentials" "credentials"]) "taxi"))
+
+(def reappt-host
+  (or (get-in vcap-services ["push-reappt" 0 "credentials" "host"]) (.get (System/getenv) "REAPPT_HOST") "localhost"))
+
+(def reappt-port
+  (if vcap-services "443" (or (.get (System/getenv) "REAPPT_PORT") "8080")))
+
+(def reappt-secure
+  (if vcap-services "true" (or (.get (System/getenv) "REAPPT_SECURE") "false")))
 
 ;; This populates the js/endpoint.js. It sets targeted Reappt server based on
 ;; the environmental variables REAPPT_HOST, REAPPT_PORT and REAPPT_SECURE.
@@ -27,14 +49,20 @@
 (def endpoint
   (str
     "window.reapptHost = '"
-    (or (.get (System/getenv) "REAPPT_HOST") "localhost")
+    reappt-host
     "';\n"
     "window.reapptPort = '"
-    (or (.get (System/getenv) "REAPPT_PORT") "8080")
+    reappt-port
     "';\n"
     "window.reapptSecure = "
-    (or (.get (System/getenv) "REAPPT_SECURE") "false")
-    ";\n"))
+    reappt-secure
+    ";\n"
+    "window.reapptPrincipal = '"
+    session-principal
+    "';\n"
+    "window.reapptCredential = '"
+    session-credential
+    "';\n"))
 
 (defroutes app-routes
   (GET "/" [] (resp/redirect "/index.html"))

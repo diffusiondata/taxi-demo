@@ -18,7 +18,8 @@
   (:gen-class)
   (:require [taxi.communication :as diffusion]
             [taxi.auction :as auction]
-            [taxi.journey :as journey])
+            [taxi.journey :as journey]
+            [clojure.data.json :as json])
   (:use [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
   (:import com.pushtechnology.diffusion.client.session.Session$State))
 
@@ -43,15 +44,33 @@
 ;; accepts the auction will change to accepted
 
 
+(def vcap-services
+  (let [vcap-services-string (.get (System/getenv) "VCAP_SERVICES")]
+    (if vcap-services-string
+      (json/read-str vcap-services-string)
+      nil)))
+
+(def session-principal
+  (if vcap-services
+    (get-in vcap-services ["push-reappt" 0 "credentials" "principal"])
+    "taxi-controller"))
+
+(def session-credential
+  (if vcap-services
+    (get-in vcap-services ["push-reappt" 0 "credentials" "credentials"])
+    "taxi"))
+
 ;; The connection URL, it sets targeted Reappt server based on the
 ;; environmental variables REAPPT_HOST, REAPPT_PORT and REAPPT_SECURE.
 ;; If defaults to localhost:8080
 (def reappt-url
-  (str
-    (if (= (.get (System/getenv) "REAPPT_SECURE") "true") "wss://" "ws://")
-    (or (.get (System/getenv) "REAPPT_HOST") "localhost")
-    ":"
-    (or (.get (System/getenv) "REAPPT_PORT") "8080")))
+  (if vcap-services
+    (str "wss://" (get-in vcap-services ["push-reappt" 0 "credentials" "host"]) ":443")
+    (str
+      (if (= (.get (System/getenv) "REAPPT_SECURE") "true") "wss://" "ws://")
+      (or (.get (System/getenv) "REAPPT_HOST") "localhost")
+      ":"
+      (or (.get (System/getenv) "REAPPT_PORT") "8080"))))
 
 (defn- create-session
   "Create a new session from the session factory."
@@ -89,7 +108,7 @@
                          :last-auction-id 0
                          :journeys {}
                          :last-journey-id 0})
-        session-factory (diffusion/create-session-factory jackie "taxi-controller" "taxi")]
+        session-factory (diffusion/create-session-factory jackie session-principal session-credential)]
 
     (create-session session-factory)
 

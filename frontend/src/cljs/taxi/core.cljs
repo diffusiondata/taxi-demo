@@ -35,8 +35,8 @@
                              :port (.-reapptPort js/window)
                              :secure (.-reapptSecure js/window)
                              :reconnect false
-                             :principal "taxi"
-                             :credentials "taxi"})
+                             :principal (.-reapptPrincipal js/window)
+                             :credentials (.-reapptCredential js/window)})
 
 (defonce app-state (atom {}))
 

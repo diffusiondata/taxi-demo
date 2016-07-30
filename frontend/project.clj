@@ -21,6 +21,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
   :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/data.json "0.2.6"]
                  [org.clojure/clojurescript "1.7.228"]
                  [figwheel "0.5.1"]
                  [org.clojure/core.async "0.2.374"]

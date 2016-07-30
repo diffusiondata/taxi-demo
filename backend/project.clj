@@ -23,6 +23,7 @@
   :repositories {"diffusion" "http://download.pushtechnology.com/maven/"}
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.async "0.2.374"]
+                 [org.clojure/data.json "0.2.6"]
                  [com.pushtechnology.diffusion/diffusion-client "5.7.1"]]
 
   :source-paths ["src/clj"]
