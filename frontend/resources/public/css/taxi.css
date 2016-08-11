@@ -71,16 +71,6 @@ h1{
   z-index: 2;
 }
 
-.background-image-holder{
-  background: url("../images/header.jpg");
-  position: absolute;
-  z-index: 1;
-  height: 200px;
-  width: 100%;
-  background-size: cover!important;
-  background-position: 50% 70%!important;
-}
-
 /* Navigation */
 .nav-tabs{
   border: 0;
