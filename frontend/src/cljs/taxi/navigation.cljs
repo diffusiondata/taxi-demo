@@ -1,3 +1,19 @@
+
+;; ******************************************************************************
+;; Copyright (C) 2016 Push Technology Ltd.
+;;
+;; Licensed under the Apache License, Version 2.0 (the "License");
+;; you may not use this file except in compliance with the License.
+;; You may obtain a copy of the License at
+;; http://www.apache.org/licenses/LICENSE-2.0
+;;
+;; Unless required by applicable law or agreed to in writing, software
+;; distributed under the License is distributed on an "AS IS" BASIS,
+;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;; See the License for the specific language governing permissions and
+;; limitations under the License.
+;; *******************************************************************************
+
 (ns ^:figwheel-always taxi.navigation
 
     (:require [taxi.taxi :as taxi]
@@ -44,7 +60,7 @@
                            )
               }
        (n/nav-item {:key 1 :href (controller-page)} "World view")
-       (n/nav-item {:key 2 :href (auction-page)} "Veiw auctions")
+       (n/nav-item {:key 2 :href (auction-page)} "View auctions")
        (n/nav-item {:key 3 :href (taxi-page)} "Taxis")
        (n/nav-item {:key 4 :href (passenger-page)} "Add passenger")))))
 
@@ -64,7 +80,7 @@
     (render [_]
       (dom/div
        #js {:className "content"}
-       (r/page-header {} "Veiw auctions")
+       (r/page-header {} "View auctions")
        (om/build controller/auctions-view data)))))
 
 (defn taxi-page-view [data _]

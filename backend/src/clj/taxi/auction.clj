@@ -1,30 +1,24 @@
+
+;; ******************************************************************************
+;; Copyright (C) 2016 Push Technology Ltd.
+;;
+;; Licensed under the Apache License, Version 2.0 (the "License");
+;; you may not use this file except in compliance with the License.
+;; You may obtain a copy of the License at
+;; http://www.apache.org/licenses/LICENSE-2.0
+;;
+;; Unless required by applicable law or agreed to in writing, software
+;; distributed under the License is distributed on an "AS IS" BASIS,
+;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;; See the License for the specific language governing permissions and
+;; limitations under the License.
+;; *******************************************************************************
+
 (ns taxi.auction
   (:use
-   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]]
-   [clojure.edn :as edn :only [read-string]])
-  (:require [taxi.communication :as diffusion])
-  (:import com.pushtechnology.diffusion.client.Diffusion
-           com.pushtechnology.diffusion.client.session.Session
-           com.pushtechnology.diffusion.client.session.Session$Listener
-           com.pushtechnology.diffusion.client.session.Session$State
-           com.pushtechnology.diffusion.client.features.control.topics.MessagingControl
-           com.pushtechnology.diffusion.client.features.control.topics.MessagingControl$MessageHandler
-           com.pushtechnology.diffusion.client.features.control.topics.MessagingControl$SendCallback
-           com.pushtechnology.diffusion.client.features.control.topics.TopicControl
-           com.pushtechnology.diffusion.client.features.control.topics.TopicControl$AddCallback
-           com.pushtechnology.diffusion.client.features.control.topics.TopicControl$RemoveCallback
-           com.pushtechnology.diffusion.client.features.Topics
-           com.pushtechnology.diffusion.client.features.Topics$CompletionCallback
-           com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl
-           com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl$Updater$UpdateCallback
-           com.pushtechnology.diffusion.client.features.Topics$TopicStream
-           com.pushtechnology.diffusion.client.topics.details.TopicType
-           com.pushtechnology.diffusion.client.callbacks.TopicTreeHandler
-
-           java.lang.Thread
-           java.security.KeyStore
-           javax.net.ssl.SSLContext
-           javax.net.ssl.TrustManagerFactory))
+   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
+  (:require [taxi.communication :as diffusion]
+            [taxi.journey :as journey]))
 
 (def auction-time-ms (* 20 1000))
 (def auction-keep-alive-ms (* 2 60 1000))
@@ -48,15 +42,16 @@
     (diffusion/update-topic (:session @app-state) auction-chan (str "controller/auctions/" auction-id) auction)
     (go
      (<! (timeout auction-keep-alive-ms))
-     (diffusion/remove-topics (:session @app-state) auction-chan (str ">controller/auctions/" auction-id)))
-    ))
+     ;; Remove local auction state and Diffusion topic
+     (let [new-state (swap! app-state update-in [:auctions] dissoc auction-id)]
+       (diffusion/remove-topics (:session new-state) auction-chan (str ">controller/auctions/" auction-id))))))
 
 (defn- claim-auction
   "Update the app-state with a new auction."
-  [{:keys [last-auction-id session] :as state} request]
+  [{:keys [last-auction-id session] :as state} request journey]
 
   (let [auction-id (inc last-auction-id)
-        auction {:id auction-id :journey request :auction-state :open}]
+        auction {:id auction-id :journey request :auction-state :open :journey-id (:journey-id journey)}]
     (-> state
         (assoc-in [:auctions auction-id] auction)
         (assoc :last-auction-id auction-id))))
@@ -65,11 +60,12 @@
   "Process new :journey message event."
   [request auction-chan app-state]
 
-  (let [new-state (swap! app-state claim-auction request)
+  (let [journey (journey/new-journey request auction-chan app-state)
+        new-state (swap! app-state claim-auction (assoc (:journey request) :passenger (:display-name request)) journey)
         auction-id (:last-auction-id new-state)
         auction (get-in new-state [:auctions auction-id])]
 
-    (println "Starting auction" auction-id new-state)
+    (println "Starting auction" auction-id (:journey request))
 
     (diffusion/add-topic (:session @app-state) auction-chan (str "controller/auctions/" auction-id) auction)
 
@@ -97,13 +93,12 @@
         current-auction (get-in new-state [:auctions id])]
     (diffusion/update-topic (:session @app-state) auction-chan (str "controller/auctions/" id) current-auction)))
 
-(defn- journey-accepted
-  ""
-  [value])
+(defn- auction-win-acknowledged
+  "Process a taxis acknowledgement of the auction win."
+  [value app-state]
 
-(defn- taxi-arrived-to-collect
-  ""
-  [value])
+  (println "Auction result for" (:auction-id value) "acknowledged")
+  (swap! app-state assoc-in [:auctions (:auction-id value) :auction-state] :accepted))
 
 (defn process-message
   "Process message events taken from the channel.
@@ -113,6 +108,5 @@
   (condp = type
     :journey  (start-auction value auction-chan app-state)
     :bid      (update-auction value session-id auction-chan app-state)
-    :accept-journey (journey-accepted value)
-    :collection-arrival (taxi-arrived-to-collect value)
-    (println "Ignoring" request)))
+    :acknowledge-win (auction-win-acknowledged value app-state)
+    nil))

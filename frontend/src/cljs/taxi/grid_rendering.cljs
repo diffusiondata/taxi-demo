@@ -1,3 +1,19 @@
+
+;; ******************************************************************************
+;; Copyright (C) 2016 Push Technology Ltd.
+;;
+;; Licensed under the Apache License, Version 2.0 (the "License");
+;; you may not use this file except in compliance with the License.
+;; You may obtain a copy of the License at
+;; http://www.apache.org/licenses/LICENSE-2.0
+;;
+;; Unless required by applicable law or agreed to in writing, software
+;; distributed under the License is distributed on an "AS IS" BASIS,
+;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;; See the License for the specific language governing permissions and
+;; limitations under the License.
+;; *******************************************************************************
+
 (ns ^:figwheel-always taxi.grid-rendering
     (:require
      [taxi.world :as world]
@@ -154,7 +170,8 @@
                             :left taxi-size}}
            (apply dom/table
                   nil
-                  (taxi-info-facts taxi [[:direction "Direction" util/direction-to-string]
+                  (taxi-info-facts taxi [[:display-name "Name" identity]
+                                         [:direction "Direction" util/direction-to-string]
                                          [:estimated-speed "Estimated speed" (partial util/float-to-string 2)]
                                          [:position "Position" util/location-to-string]
                                          [:known-position "Last known position" util/location-to-string]
@@ -192,21 +209,22 @@
                        :width taxi-size
                        :height taxi-size))}))
 
-(defn- passenger-info [auction]
+(defn- passenger-info [passenger]
   "Return a passenger info div."
   (dom/div #js {:className "passengerInfo"
                 :style #js {:left taxi-size
                             :position "absolute"}}
            (dom/div nil (dom/span nil
-                                  (str "I want to go to "
-                                       (util/location-to-string (:destination (:journey auction))))))
-           (if (not (nil? (:bid auction)))
+                                  (str (:display-name passenger)
+                                       " wants to go to "
+                                       (util/location-to-string (:destination (:journey passenger))))))
+           (if (not (nil? (:bid passenger)))
              (dom/div nil (dom/span nil
                                     (str "Current bid "
-                                         (util/money-to-string (:bid auction))))))))
+                                         (util/money-to-string (:bid passenger))))))))
 
-(defn- auction [auction]
-  "Render a single auction."
+(defn- waiting-passenger [passenger]
+  "Render a single waiting passenger."
   (reify om/IRender
     (render
      [_]
@@ -214,18 +232,65 @@
                    :style #js {:height taxi-size
                                :width taxi-size
                                :left (block-offset
-                                      (nth (:location (:journey auction)) 0))
+                                      (nth (:location (:journey passenger)) 0))
                                :top  (block-offset
-                                      (nth (:location (:journey auction)) 1))}}
-              (passenger-info auction)))))
+                                      (nth (:location (:journey passenger)) 1))}}
+              (passenger-info passenger)))))
 
-(defn- auctions
-  "Returns a sequence containing all the React components that represent an
-  auction."
+(defn- gather-journey-info
+  "Gather the information needed to display journeys on the world view."
+  [state]
+
+  (let [passengers (filter #(= (:journey-state %) :pending) (vals (:global-journeys state)))]
+    (map (fn [journey]
+           (let [auctions-for-journey (filter #(= (:journey-id journey) (:journey-id %)) (vals (:auctions state)))]
+             (if
+               (first auctions-for-journey)
+               ; Found an auction for the journey add current bid information
+               (assoc journey :bid (:bid (first auctions-for-journey)))
+               ; Did not find an auction for the journey
+               journey)))
+         passengers)))
+
+(defn- waiting-passengers
+  "Returns a sequence containing all the React components that represent
+  pending journeys."
   [state]
   (om/build-all
-   auction
-   (vals (:auctions state))))
+   waiting-passenger
+   (gather-journey-info state)))
+
+(defn- passenger-arrival [passenger]
+  "Return a passenger arrival div."
+  (dom/div #js {:className "passengerInfo"
+                :style #js {:left taxi-size
+                            :position "absolute"}}
+           (dom/div nil (dom/span nil
+                                  (str (:display-name passenger)
+                                       " has arrived at "
+                                       (util/location-to-string (:destination (:journey passenger))))))))
+
+(defn- arrived-passenger [passenger]
+  "Render a single waiting passenger."
+  (reify om/IRender
+    (render
+     [_]
+     (dom/div #js {:className "passenger"
+                   :style #js {:height taxi-size
+                               :width taxi-size
+                               :left (block-offset
+                                      (nth (:destination (:journey passenger)) 0))
+                               :top  (block-offset
+                                      (nth (:destination (:journey passenger)) 1))}}
+              (passenger-arrival passenger)))))
+
+(defn- arrived-passengers
+  "Returns a sequence containing all the React components that represent
+  completed journeys."
+  [state]
+  (om/build-all
+   arrived-passenger
+   (filter #(= (:journey-state %) :complete) (vals (:global-journeys state)))))
 
 (defn view
   [state owner]
@@ -240,5 +305,7 @@
           (grid state)
           (taxis state)
           (locations state)
-          (auctions state)))))))
+          (waiting-passengers state)
+          (arrived-passengers state)
+          ))))))
 

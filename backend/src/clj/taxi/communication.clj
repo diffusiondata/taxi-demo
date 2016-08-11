@@ -1,8 +1,24 @@
+
+;; ******************************************************************************
+;; Copyright (C) 2016 Push Technology Ltd.
+;;
+;; Licensed under the Apache License, Version 2.0 (the "License");
+;; you may not use this file except in compliance with the License.
+;; You may obtain a copy of the License at
+;; http://www.apache.org/licenses/LICENSE-2.0
+;;
+;; Unless required by applicable law or agreed to in writing, software
+;; distributed under the License is distributed on an "AS IS" BASIS,
+;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;; See the License for the specific language governing permissions and
+;; limitations under the License.
+;; *******************************************************************************
+
 (ns taxi.communication
-  (:gen-class)
   (:use
-   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]]
-   [clojure.edn :as edn :only [read-string]])
+   [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
+  (:require
+   [clojure.edn :as edn])
   (:import com.pushtechnology.diffusion.client.Diffusion
            com.pushtechnology.diffusion.client.session.Session
            com.pushtechnology.diffusion.client.session.Session$Listener
@@ -13,11 +29,8 @@
            com.pushtechnology.diffusion.client.features.control.topics.TopicControl
            com.pushtechnology.diffusion.client.features.control.topics.TopicControl$AddCallback
            com.pushtechnology.diffusion.client.features.control.topics.TopicControl$RemoveCallback
-           com.pushtechnology.diffusion.client.features.Topics
-           com.pushtechnology.diffusion.client.features.Topics$CompletionCallback
            com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl
            com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl$Updater$UpdateCallback
-           com.pushtechnology.diffusion.client.features.Topics$TopicStream
            com.pushtechnology.diffusion.client.topics.details.TopicType
            com.pushtechnology.diffusion.client.callbacks.TopicTreeHandler
 
@@ -36,24 +49,37 @@
 (defn- to-content
   "Create a new Content containing the value passed in, serialised as an EDN value."
   [value]
+
   (.newContent (Diffusion/content) (pr-str value)))
 
-(defn- resource-as-stream [resource]
+(defn- resource-as-stream
+  "Obtain a resource on the classpath as a stream."
+  [resource]
+
   (.getResourceAsStream
    (.getContextClassLoader (Thread/currentThread))
    resource))
 
-(defn- create-trust-store [stream]
+(defn- create-trust-store
+  "Create a trust store from a stream."
+  [stream]
+
   (let [new-store (KeyStore/getInstance (KeyStore/getDefaultType))]
     (.load new-store stream nil)
     new-store))
 
-(defn- create-trust-manager-factory [trust-store]
+(defn- create-trust-manager-factory
+  "Create a TrustManagerFactory from a trust store."
+  [trust-store]
+
   (let [factory (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))]
     (.init factory trust-store)
     factory))
 
-(defn- create-ssl-context [trust-manager-factory]
+(defn- create-ssl-context
+  "Create an SSLContext from a TrustManagerFactory."
+  [trust-manager-factory]
+
   (let [context (SSLContext/getInstance "SSL")]
     (.init context nil (.getTrustManagers trust-manager-factory), nil)
     context))
@@ -61,6 +87,7 @@
 (defn- create-ssl-context-from-trust-store-resource
   "Returns an SSL context created from a trust store resource."
   [resource]
+
   (create-ssl-context
    (create-trust-manager-factory
     (create-trust-store
@@ -70,6 +97,7 @@
   "Send a message to a session. The message is sent as an EDN value. The result of the callback will be placed on the channel.
   These results will be identified by the :send-message keyword."
   [sending-session jackie recipient-session-id topic-path message]
+
     (println "Sending message" topic-path "with" message)
     (-> sending-session
       (.feature TopicControl)
@@ -93,6 +121,7 @@
   "Add a new stateful topic that publishes an EDN value. The result of the callback will be placed on the channel.
   These results will be identified by the :topic-add keyword"
   [session jackie topic-path initial-value]
+
   (println "Adding topic" topic-path "with" initial-value)
   (-> session
       (.feature TopicControl)
@@ -121,6 +150,7 @@
   "Update an existing topic with a new EDN value. The result of the callback will be placed on the channel.
   These results will be identified by the :topic-update keyword"
   [session jackie topic-path new-value]
+
   (println "Updating topic" topic-path "with" new-value)
   (-> session
       (.feature TopicUpdateControl)
@@ -144,6 +174,7 @@
   "Remove topics matching a selector from the server. The result of the callback will be placed on the channel.
   These results will be identified by the :topics-remove keyword."
   [session jackie topic-selector]
+
   (-> session
       (.feature TopicControl)
       (.removeTopics
@@ -189,65 +220,11 @@
        (into-array String []))
   ))
 
-(defn subscribe
-  "Subscribe the session to a selector, place the result onto the channel passed in.
-  The result will be identified by the :subscribe-request keyword."
-  [session jackie topic-selector]
-
-  (-> session
-      (.feature Topics)
-      (.subscribe
-       topic-selector
-       (reify Topics$CompletionCallback
-
-         (onComplete [this]
-                     (go (>! jackie {:subscribe-request {:result :completed}}))
-                     nil)
-
-         (onDiscard [this]
-                    (go (>! jackie {:subscribe-request {:result :discarded}}))
-                    nil)
-
-         ))))
-
-(defn- add-topics-stream
-  "Add a topic stream to the session that puts events onto the channel passed in. The topic stream is registered as the
-  fallback topic stream.
-  The stream events be identified by the keywords :subscription, :update, :unsubscription,
-  :topic-stream-close and :topic-stream-error."
-  [session jackie]
-
-  (-> session
-      (.feature Topics)
-      (.addFallbackTopicStream
-       (reify Topics$TopicStream
-
-         (onSubscription [this topic-path topic-details]
-                         (go (>! jackie {:subscription {:topic-path topic-path}}))
-                         nil)
-
-         (onTopicUpdate [this topic-path content update-context]
-                        (go (>! jackie {:update {:topic-path topic-path :content (parse-content content)}}))
-                         nil)
-
-         (onUnsubscription [this topic-path reason]
-                           (go (>! jackie {:unsubscription {:topic-path topic-path :reason reason}}))
-                           nil)
-
-         (onClose [this]
-                  (go (>! jackie {:topic-stream-close {}}))
-                  nil)
-
-         (onError [this reason]
-                  (go (>! jackie {:topic-stream-error {:error reason}}))
-                  nil)
-
-         ))))
-
 (defn remove-topics-with-session
   "Register topics to remove when the session closes. The result is placed on the channel passed in.
   The result is identified by the :remove-topics-with-session keyword."
   [session jackie topic-path]
+
   (-> session
       (.feature TopicControl)
       (.removeTopicsWithSession
@@ -275,15 +252,11 @@
   by the keyword :state-change. When the session becomes active it will add the fallback topics stream to receive
   any updates to topics it subscribes to."
   [jackie principal password]
+
   (let [listener (reify Session$Listener
                      (onSessionStateChanged
                       [this session old-state new-state]
-                      (when (and
-                             (= old-state
-                                Session$State/CONNECTING)
-                             (= new-state
-                                Session$State/CONNECTED_ACTIVE))
-                        (add-topics-stream session jackie))
+
                       (go (>! jackie {:state-change {:session session :old-state old-state :new-state new-state}}))
                       nil))]
 

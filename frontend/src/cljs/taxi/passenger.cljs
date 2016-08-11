@@ -1,8 +1,25 @@
+
+;; ******************************************************************************
+;; Copyright (C) 2016 Push Technology Ltd.
+;;
+;; Licensed under the Apache License, Version 2.0 (the "License");
+;; you may not use this file except in compliance with the License.
+;; You may obtain a copy of the License at
+;; http://www.apache.org/licenses/LICENSE-2.0
+;;
+;; Unless required by applicable law or agreed to in writing, software
+;; distributed under the License is distributed on an "AS IS" BASIS,
+;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;; See the License for the specific language governing permissions and
+;; limitations under the License.
+;; *******************************************************************************
+
 (ns ^:figwheel-always taxi.passenger
     "Passenger model and application."
 
     (:require [taxi.communication :as d]
               [taxi.world :as world]
+              [taxi.util :as util]
               [om.core :as om :include-macros true]
               [om.dom :as dom :include-macros true]
               [om-bootstrap.input :as i]
@@ -16,7 +33,7 @@
 
 (def next-id (atom 0))
 
-(defn- new-journey
+(defn- create-new-journey
   "Create a new journey"
   [error session]
 
@@ -28,7 +45,7 @@
      }))
 
 (defn- add-journey [{:keys [error session journeys] :as data}]
-  (om/transact! data :journeys #(conj % (new-journey error session))))
+  (om/transact! data :journeys #(conj % (create-new-journey error session))))
 
 (defn- process-event [v]
   (println "RECEIVED " v))
@@ -89,8 +106,9 @@
 
 (defn- journey-request [p location destination]
   {:passenger p
-   :location location
-   :destination destination})
+   :display-name (util/new-name)
+   :journey {:location location
+             :destination destination}})
 
 (defn- new-journey [data owner]
   (let [start (-> (om/get-node owner "start") .-value parse-location)
@@ -99,7 +117,7 @@
     (when (and start end)
       (let [{:keys [error session passenger]} data
             request (journey-request (:passenger data) start end)]
-        (d/send-message error session "controller/auctions" {:type :journey :value request})))))
+        (d/send-message error session "controller" {:type :journey :value request})))))
 
 (defn- new-journey-form-event [event data owner]
   (new-journey data owner)

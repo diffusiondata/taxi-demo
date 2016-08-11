@@ -1,7 +1,24 @@
+
+;; ******************************************************************************
+;; Copyright (C) 2016 Push Technology Ltd.
+;;
+;; Licensed under the Apache License, Version 2.0 (the "License");
+;; you may not use this file except in compliance with the License.
+;; You may obtain a copy of the License at
+;; http://www.apache.org/licenses/LICENSE-2.0
+;;
+;; Unless required by applicable law or agreed to in writing, software
+;; distributed under the License is distributed on an "AS IS" BASIS,
+;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+;; See the License for the specific language governing permissions and
+;; limitations under the License.
+;; *******************************************************************************
+
 (ns taxi.core
   (:gen-class)
   (:require [taxi.communication :as diffusion]
-            [taxi.auction :as auction])
+            [taxi.auction :as auction]
+            [taxi.journey :as journey])
   (:use [clojure.core.async :only [>! <! <!! close! go go-loop chan timeout]])
   (:import com.pushtechnology.diffusion.client.session.Session$State))
 
@@ -25,20 +42,22 @@
 ;; reset, and a new bidding round will start. If the bidder
 ;; accepts the auction will change to accepted
 
-(def local-connection "ws://localhost:8080")
-(def reappt-connection "wss://pushingstrikingAres.us.reappt.io:443")
-(def env-connection
+
+;; The connection URL, it sets targeted Reappt server based on the
+;; environmental variables REAPPT_HOST, REAPPT_PORT and REAPPT_SECURE.
+;; If defaults to localhost:8080
+(def reappt-url
   (str
     (if (= (.get (System/getenv) "REAPPT_SECURE") "true") "wss://" "ws://")
-    (.get (System/getenv) "REAPPT_HOST")
+    (or (.get (System/getenv) "REAPPT_HOST") "localhost")
     ":"
-    (.get (System/getenv) "REAPPT_PORT")))
+    (or (.get (System/getenv) "REAPPT_PORT") "8080")))
 
 (defn- create-session
   "Create a new session from the session factory."
   [session-factory]
 
-  (.open session-factory env-connection))
+  (.open session-factory reappt-url))
 
 (defn- handle-session-state-change
   "Handle state change event.
@@ -53,9 +72,9 @@
          (= new-state
             Session$State/CONNECTED_ACTIVE))
     (swap! app-state assoc :session session)
-    (diffusion/register-message-handler session jackie "controller/auctions")
-    (diffusion/register-message-handler session jackie "controller/collection")
-    (diffusion/remove-topics-with-session session jackie "controller/auctions"))
+    (diffusion/register-message-handler session jackie "controller")
+    (diffusion/remove-topics-with-session session jackie "controller/auctions")
+    (diffusion/remove-topics-with-session session jackie "controller/journey"))
 
   ; Trigger connect again
   (when (= new-state
@@ -67,7 +86,9 @@
 
   (let [jackie (chan)
         app-state (atom {:auctions {}
-                         :last-auction-id 0})
+                         :last-auction-id 0
+                         :journeys {}
+                         :last-journey-id 0})
         session-factory (diffusion/create-session-factory jackie "taxi-controller" "taxi")]
 
     (create-session session-factory)
@@ -79,7 +100,9 @@
 
             (cond
               (:state-change event)  (handle-session-state-change (:state-change event) jackie app-state)
-              (:message event)       (auction/process-message app-state jackie (:session-id (:message event)) (:content (:message event)))
+              (:message event)       (do
+                                       (auction/process-message app-state jackie (:session-id (:message event)) (:content (:message event)))
+                                       (journey/process-message app-state jackie (:session-id (:message event)) (:content (:message event))))
               (:topic-add event)     (let [detail (:topic-add event)]
                                        (when (= (:result detail) :failed) (println "Failed to add topic" (:topic-path detail) "because" (:reason detail)))
                                        (when (= (:result detail) :discarded) (println "Topic addition not confirmed for" (:topic-path detail))))
