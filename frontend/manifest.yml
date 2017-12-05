@@ -19,7 +19,7 @@ applications:
   memory: "384M"
   disk_quota: "256M"
   path: "target/taxi-0.1.0-SNAPSHOT-standalone.war"
-  host: "reappttaxi"
+  host: "my-dc-taxi-demo"
   domain: "mybluemix.net"
   timeout: 60
   services:
