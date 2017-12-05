@@ -34,33 +34,33 @@
 (def session-credential
   (or (get-in vcap-services ["push-reappt" 0 "credentials" "credentials"]) "taxi"))
 
-(def reappt-host
-  (or (get-in vcap-services ["push-reappt" 0 "credentials" "host"]) (.get (System/getenv) "REAPPT_HOST") "localhost"))
+(def diffusion-host
+  (or (get-in vcap-services ["push-reappt" 0 "credentials" "host"]) (.get (System/getenv) "DIFFUSION_HOST") "localhost"))
 
-(def reappt-port
-  (if vcap-services "443" (or (.get (System/getenv) "REAPPT_PORT") "8080")))
+(def diffusion-port
+  (if vcap-services "443" (or (.get (System/getenv) "DIFFUSION_PORT") "8080")))
 
-(def reappt-secure
-  (if vcap-services "true" (or (.get (System/getenv) "REAPPT_SECURE") "false")))
+(def diffusion-secure
+  (if vcap-services "true" (or (.get (System/getenv) "DIFFUSION_SECURE") "false")))
 
-;; This populates the js/endpoint.js. It sets targeted Reappt server based on
-;; the environmental variables REAPPT_HOST, REAPPT_PORT and REAPPT_SECURE.
+;; This populates the js/endpoint.js. It sets targeted Diffusion server based on
+;; the environmental variables DIFFUSION_HOST, DIFFUSION_PORT and DIFFUSION_SECURE.
 ;; If defaults to localhost:8080
 (def endpoint
   (str
-    "window.reapptHost = '"
-    reappt-host
+    "window.diffusionHost = '"
+    diffusion-host
     "';\n"
-    "window.reapptPort = '"
-    reappt-port
+    "window.diffusionPort = '"
+    diffusion-port
     "';\n"
-    "window.reapptSecure = "
-    reappt-secure
+    "window.diffusionSecure = "
+    diffusion-secure
     ";\n"
-    "window.reapptPrincipal = '"
+    "window.diffusionPrincipal = '"
     session-principal
     "';\n"
-    "window.reapptCredential = '"
+    "window.diffusionCredential = '"
     session-credential
     "';\n"))
 
@@ -72,4 +72,3 @@
 
 (def handler
   (etag/wrap-not-modified (handler/site app-routes)))
-

@@ -60,23 +60,23 @@
     (get-in vcap-services ["push-reappt" 0 "credentials" "credentials"])
     "taxi"))
 
-;; The connection URL, it sets targeted Reappt server based on the
-;; environmental variables REAPPT_HOST, REAPPT_PORT and REAPPT_SECURE.
+;; The connection URL, it sets targeted Diffusion server based on the
+;; environmental variables DIFFUSION_HOST, DIFFUSION_PORT and DIFFUSION_SECURE.
 ;; If defaults to localhost:8080
-(def reappt-url
+(def diffusion-url
   (if vcap-services
     (str "wss://" (get-in vcap-services ["push-reappt" 0 "credentials" "host"]) ":443")
     (str
-      (if (= (.get (System/getenv) "REAPPT_SECURE") "true") "wss://" "ws://")
-      (or (.get (System/getenv) "REAPPT_HOST") "localhost")
+      (if (= (.get (System/getenv) "DIFFUSION_SECURE") "true") "wss://" "ws://")
+      (or (.get (System/getenv) "DIFFUSION_HOST") "localhost")
       ":"
-      (or (.get (System/getenv) "REAPPT_PORT") "8080"))))
+      (or (.get (System/getenv) "DIFFUSION_PORT") "8080"))))
 
 (defn- create-session
   "Create a new session from the session factory."
   [session-factory]
 
-  (.open session-factory reappt-url))
+  (.open session-factory diffusion-url))
 
 (defn- handle-session-state-change
   "Handle state change event.

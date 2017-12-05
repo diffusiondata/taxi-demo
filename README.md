@@ -1,6 +1,6 @@
 # "Darunter" Taxi Demo
 
-A demo for Reappt and Bluemix themed on taxis.
+A demo for Diffusion Cloud and Bluemix themed on taxis.
 
 The demo models a small town, passengers and taxis. When a passenger appears taxis can bid on the opportunity to give them a ride. The winning taxi collects and delivers the passenger and gets paid the fare.
 
@@ -34,15 +34,15 @@ Passengers will eventually give up. If you add a passenger without any taxis or 
 
 The "Darunter" taxi demo is divided into two parts, a frontend and a backend.
 
-The frontend is a browser based client served as static content. The client has been written in ClojureScript and uses the JavaScript API to speak to the Reappt server.
+The frontend is a browser based client served as static content. The client has been written in ClojureScript and uses the JavaScript API to speak to the Diffusion Cloud server.
 
-The backend has been written in Clojure using the Java API to speak to the Reappt server and runs as a process.
+The backend has been written in Clojure using the Java API to speak to the Diffusion Cloud server and runs as a process.
 
-Although Clojure and ClojureScript look like the same language because they depend on different Diffusion APIs the code they use to interact with Reappt looks slightly different. For example the Clojure code identifies the target server a URL and the ClojureScript code uses a JavaScript object with the properties `host` and `port`.
+Although Clojure and ClojureScript look like the same language because they depend on different Diffusion APIs the code they use to interact with Diffusion Cloud looks slightly different. For example the Clojure code identifies the target server a URL and the ClojureScript code uses a JavaScript object with the properties `host` and `port`.
 
 ## Deploying and hosting
 
-The demo is intended to be deployed as two applications to IBM Bluemix and to connect to a Reappt service also created through Bluemix. Manifest files are provided for both the frontend and backend to allow them to be easily deployed to Bluemix using the CloudFoundry command line tools. It is possible to run locally but the instructions provided are for Bluemix.
+The demo is intended to be deployed as two applications to IBM Bluemix and to connect to a Diffusion Cloud service also created through Bluemix. Manifest files are provided for both the frontend and backend to allow them to be easily deployed to Bluemix using the CloudFoundry command line tools. It is possible to run locally but the instructions provided are for Bluemix.
 
 ### Prerequisites
 
@@ -54,11 +54,11 @@ The demo is intended to be deployed as two applications to IBM Bluemix and to co
 ### Instructions
 
 1. Set up a space for the application in Bluemix
-2. Add a Reappt service to that space
-3. Through the Reappt dashboard add the credentials taxi/taxi with the `TOPIC_CONTROL` role
-4. Through the Reappt dashboard add the credentials taxi-controller/taxi with the `TOPIC_CONTROL` role
+2. Add a Diffusion Cloud service to that space
+3. Through the Diffusion Cloud dashboard add the credentials taxi/taxi with the `TOPIC_CONTROL` role
+4. Through the Diffusion Cloud dashboard add the credentials taxi-controller/taxi with the `TOPIC_CONTROL` role
 5. Use git to clone the repository
-6. Modify the `manifest.yml` of the front- and backend applications to use the correct Reappt service host
+6. Modify the `manifest.yml` of the front- and backend applications to use the correct Diffusion Cloud service host
 7. Modify the `manifest.yml` of the frontend application to use a unique Bluemix routing
 8. Use the Leiningen alias `release-build` to build both the front- and backend applications
 9. Select the space you added using the CloudFoundry CLI tools
