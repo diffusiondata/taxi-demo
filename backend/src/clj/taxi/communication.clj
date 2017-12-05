@@ -263,5 +263,5 @@
       (-> (Diffusion/sessions)
           (.principal principal)
           (.password password)
-          (.sslContext (create-ssl-context-from-trust-store-resource "reapptTruststore.jks"))
+          (.sslContext (create-ssl-context-from-trust-store-resource "diffusionCloudTruststore.jks"))
           (.listener listener))))
