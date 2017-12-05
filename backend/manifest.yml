@@ -16,7 +16,7 @@
 
 applications:
 - name: "taxi-controller"
-  memory: "384M"
+  memory: "512M"
   disk_quota: "256M"
   path: "target/taxi-controller-0.1.0-SNAPSHOT-standalone.jar"
   no-route: true
