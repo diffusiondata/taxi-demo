@@ -25,5 +25,4 @@ applications:
   env:
     JVM: openjdk
   services:
-    - taxi-reappt
-
+    - diffusion-cloud-service

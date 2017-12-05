@@ -23,5 +23,4 @@ applications:
   domain: "mybluemix.net"
   timeout: 60
   services:
-    - taxi-reappt
-
+    - diffusion-cloud-service
