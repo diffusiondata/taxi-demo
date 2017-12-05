@@ -1,6 +1,6 @@
 # "Darunter" Taxi Demo
 
-A demo for Diffusion Cloud and Bluemix themed on taxis.
+A demo for Diffusion Cloud and IBM Cloud themed on taxis.
 
 The demo models a small town, passengers and taxis. When a passenger appears taxis can bid on the opportunity to give them a ride. The winning taxi collects and delivers the passenger and gets paid the fare.
 
@@ -42,24 +42,24 @@ Although Clojure and ClojureScript look like the same language because they depe
 
 ## Deploying and hosting
 
-The demo is intended to be deployed as two applications to IBM Bluemix and to connect to a Diffusion Cloud service also created through Bluemix. Manifest files are provided for both the frontend and backend to allow them to be easily deployed to Bluemix using the CloudFoundry command line tools. It is possible to run locally but the instructions provided are for Bluemix.
+The demo is intended to be deployed as two applications to IBM Cloud and to connect to a Diffusion Cloud service also created through IBM Cloud. Manifest files are provided for both the frontend and backend to allow them to be easily deployed to IBM Cloud using the CloudFoundry command line tools. It is possible to run locally but the instructions provided are for IBM Cloud.
 
 ### Prerequisites
 
 1. [Git](https://git-scm.com/)
 2. [Leiningen](http://leiningen.org/)
-3. [Bluemix account](https://console.ng.bluemix.net/)
+3. [IBM Cloud account](https://console.ng.bluemix.net/)
 4. [CloudFoundry CLI tools](https://github.com/cloudfoundry/cli)
 
 ### Instructions
 
-1. Set up a space for the application in Bluemix
+1. Set up a space for the application in IBM Cloud
 2. Add a Diffusion Cloud service to that space
 3. Through the Diffusion Cloud dashboard add the credentials taxi/taxi with the `TOPIC_CONTROL` role
 4. Through the Diffusion Cloud dashboard add the credentials taxi-controller/taxi with the `TOPIC_CONTROL` role
 5. Use git to clone the repository
 6. Modify the `manifest.yml` of the front- and backend applications to use the correct Diffusion Cloud service host
-7. Modify the `manifest.yml` of the frontend application to use a unique Bluemix routing
+7. Modify the `manifest.yml` of the frontend application to use a unique IBM Cloud routing
 8. Use the Leiningen alias `release-build` to build both the front- and backend applications
 9. Select the space you added using the CloudFoundry CLI tools
 10. Use the CloudFoundry CLI tools to push the front- and backend applications according to the manifest
