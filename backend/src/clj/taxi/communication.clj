@@ -28,7 +28,7 @@
            com.pushtechnology.diffusion.client.features.control.topics.MessagingControl$SendCallback
            com.pushtechnology.diffusion.client.features.control.topics.TopicControl
            com.pushtechnology.diffusion.client.features.control.topics.TopicControl$AddCallback
-           com.pushtechnology.diffusion.client.features.control.topics.TopicControl$RemoveCallback
+           com.pushtechnology.diffusion.client.features.control.topics.TopicControl$RemovalCallback
            com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl
            com.pushtechnology.diffusion.client.features.control.topics.TopicUpdateControl$Updater$UpdateCallback
            com.pushtechnology.diffusion.client.topics.details.TopicType
@@ -177,15 +177,15 @@
 
   (-> session
       (.feature TopicControl)
-      (.removeTopics
+      (.remove
        topic-selector
-       (reify TopicControl$RemoveCallback
+       (reify TopicControl$RemovalCallback
          (onTopicsRemoved
           [this]
           (go (>! jackie {:topics-remove {:result :success :topic-selector topic-selector}})))
 
-         (onDiscard
-          [this]
+         (onError
+          [this error-reason]
           (go (>! jackie {:topics-remove {:result :discarded :topic-selector topic-selector}})))
          ))))
 
